@@ -158,8 +158,8 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
 .pc-ec-name{font-size:13px;font-weight:700}
 .pc-ec-phone{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
 /* card actions */
-.pc-actions{display:grid;grid-template-columns:repeat(3, 1fr);gap:6px}
-.pc-btn{padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;text-align:center;white-space:nowrap;}
+.pc-actions{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px}
+.pc-btn{padding:11px;border-radius:9px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;text-align:center;}
 .pc-btn.edit{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
 .pc-btn.call{background:var(--red);color:#fff}
 
@@ -658,9 +658,8 @@ function renderTable(){
       <td>${p.createdAt}</td>
       <td><span class="sev-badge ${sevCls(p.severity)}">${p.severity}</span></td>
       <td>
-        <button class="action-btn" onclick="event.stopPropagation();updateStatus(${p.id},'Pending')">Pending</button>
         <button class="action-btn" style="color:var(--green);border-color:rgba(82,200,119,0.3);" onclick="event.stopPropagation();updateStatus(${p.id},'Complete')">Complete</button>
-        <button class="action-btn danger" onclick="event.stopPropagation();deletePatient(${p.id})">Delete</button>
+        <button class="action-btn call" ${p.callPhone ? '' : 'disabled'} onclick="event.stopPropagation();${p.callPhone ? `window.location.href='tel:${p.callPhone}'` : 'alert(\'Phone number not available\')'}">Call</button>
       </td>
     </tr>`).join('');
 
@@ -726,9 +725,8 @@ function renderCards(){
       </div>
 
       <div class="pc-actions">
-        <button class="pc-btn edit" onclick="event.stopPropagation();updateStatus(${p.id},'Pending')">⏳ Pending</button>
         <button class="pc-btn call" onclick="event.stopPropagation();updateStatus(${p.id},'Complete')" style="background:var(--green);color:#fff;">✅ Complete</button>
-        <button class="pc-btn" onclick="event.stopPropagation();deletePatient(${p.id})" style="background:var(--surface2);color:var(--red);border:1px solid var(--red-mid);">🗑️ Delete</button>
+        <button class="pc-btn edit" ${p.callPhone ? '' : 'disabled'} onclick="event.stopPropagation();${p.callPhone ? `window.location.href='tel:${p.callPhone}'` : 'alert(\'Phone number not available\')'}">📞 Call</button>
       </div>
     </div>`).join('');
   updateStats();
