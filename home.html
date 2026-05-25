@@ -578,9 +578,17 @@ function showError(message) {
 async function loadPatients() {
   showLoading();
   try {
-    const response = await fetch('/api/requests');
+    const apiUrl = window.location.protocol.startsWith('http') ? '/api/requests' : 'http://localhost:3000/api/requests';
+    const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      let errorText = '';
+      try {
+        const errorBody = await response.json();
+        errorText = errorBody.error || errorBody.message || JSON.stringify(errorBody);
+      } catch (err) {
+        errorText = response.statusText;
+      }
+      throw new Error(`Server error: ${response.status} ${errorText}`);
     }
     const result = await response.json();
     const requests = result.requests || result.data || [];
@@ -597,7 +605,7 @@ async function loadPatients() {
   } catch (error) {
     isLoading = false;
     console.error('❌ Failed to fetch patients data:', error);
-    showError('Failed to load emergency requests. Check your connection and try again.');
+    showError(`Failed to load emergency requests. ${error.message}`);
   }
 }
 

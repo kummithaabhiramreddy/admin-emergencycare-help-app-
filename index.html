@@ -1,1047 +1,2148 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HELP App</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --red: #FF2D3B;
-    --red-soft: #FF4B57;
-    --bg: #0A0A0F;
-    --surface: #111118;
-    --surface2: #18181F;
-    --border: rgba(255,255,255,0.07);
-    --text: #F2F2F5;
-    --muted: rgba(242,242,245,0.45);
-    --cyan: #00E5FF;
-    --green: #00FF88;
-    --amber: #FFBC42;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    background: var(--bg);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    min-height: 100vh;
-    max-width: 420px;
-    margin: 0 auto;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0.5;
-  }
-
-  /* Header */
-  .app-header {
-    padding: 20px 24px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
-  .logo span { color: var(--red); }
-
-  .header-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .account-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 14px;
-    padding: 6px;
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-    max-width: 46px;
-    flex-shrink: 0;
-    box-shadow: 0 12px 20px rgba(0,0,0,0.12);
-    backdrop-filter: blur(8px);
-  }
-
-  .account-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(255,45,59,0.18);
-    color: var(--red);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
-  }
-
-  .account-meta {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-    min-width: 0;
-  }
-
-  .account-name {
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .account-email {
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .account-card {
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .account-panel-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .account-panel-overlay.open {
-    display: flex;
-  }
-
-  .account-panel {
-    width: min(360px, calc(100% - 40px));
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
-  }
-
-  .account-panel-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .account-panel-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-  }
-
-  .account-panel-close {
-    margin-left: auto;
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 20px;
-    cursor: pointer;
-  }
-
-  .account-panel-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 14px;
-  }
-
-  .account-panel-label {
-    color: var(--muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
-
-  .account-panel-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .icon-btn {
-    width: 46px;
-    height: 46px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
-  }
-
-  .icon-btn:active { transform: scale(0.96); }
-
-  .notif-dot { position: relative; }
-
-  .notif-dot::after {
-    content: '';
-    position: absolute;
-    top: 7px; right: 7px;
-    width: 7px; height: 7px;
-    background: var(--red);
-    border-radius: 50%;
-    border: 1.5px solid var(--bg);
-  }
-
-  /* Greeting */
-  .greeting {
-    padding: 22px 24px 0;
-  }
-
-  .greeting .sub {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .greeting h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.5px;
-  }
-
-  .greeting h1 em {
-    font-style: normal;
-    color: var(--red);
-  }
-
-  /* SOS Button */
-  .sos-zone {
-    padding: 28px 24px 20px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .sos-btn {
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: var(--red);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    position: relative;
-    box-shadow:
-      0 0 0 12px rgba(255,45,59,0.12),
-      0 0 0 24px rgba(255,45,59,0.06),
-      0 20px 60px rgba(255,45,59,0.45);
-    animation: sosPulse 2.5s ease-in-out infinite;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-
-  .sos-btn:active {
-    transform: scale(0.93);
-    box-shadow: 0 0 0 8px rgba(255,45,59,0.15), 0 10px 30px rgba(255,45,59,0.4);
-  }
-
-  @keyframes sosPulse {
-    0%, 100% { box-shadow: 0 0 0 12px rgba(255,45,59,0.12), 0 0 0 24px rgba(255,45,59,0.06), 0 20px 60px rgba(255,45,59,0.45); }
-    50% { box-shadow: 0 0 0 18px rgba(255,45,59,0.18), 0 0 0 36px rgba(255,45,59,0.08), 0 20px 60px rgba(255,45,59,0.55); }
-  }
-
-  .sos-btn .sos-label {
-    font-family: 'Syne', sans-serif;
-    font-size: 42px;
-    font-weight: 800;
-    color: white;
-    line-height: 1;
-    letter-spacing: 2px;
-  }
-
-  .sos-btn .sos-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.7);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  /* Stats strip */
-  .stats-strip {
-    display: flex;
-    gap: 10px;
-    padding: 0 24px 24px;
-  }
-
-  .stat-pill {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 10px;
-    text-align: center;
-  }
-
-  .stat-pill .val {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 3px;
-  }
-
-  .stat-pill .lbl {
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .val.red { color: var(--red); }
-  .val.cyan { color: var(--cyan); }
-  .val.green { color: var(--green); }
-
-  /* Section label */
-  .section-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0 24px 12px;
-  }
-
-  /* Services grid */
-  .services-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 0 24px 24px;
-  }
-
-  .service-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px 16px;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    position: relative;
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .service-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent, var(--red));
-    opacity: 0.7;
-    border-radius: 18px 18px 0 0;
-  }
-
-  .service-card:active { transform: scale(0.96); }
-
-  .service-card:hover {
-    border-color: rgba(255,255,255,0.12);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-
-  .card-icon { font-size: 28px; line-height: 1; }
-
-  .card-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .card-desc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  .card-arrow {
-    margin-top: auto;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    align-self: flex-end;
-  }
-
-  /* Donor banner */
-  .donor-banner {
-    margin: 0 24px 24px;
-    background: linear-gradient(135deg, #1A0A0B 0%, #200D10 100%);
-    border: 1px solid rgba(255,45,59,0.2);
-    border-radius: 20px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .donor-banner:active { transform: scale(0.97); }
-
-  .donor-banner::after {
-    content: '';
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 100px; height: 100px;
-    background: radial-gradient(circle, rgba(255,45,59,0.18) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .donor-icon { font-size: 36px; flex-shrink: 0; }
-
-  .donor-text h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .donor-text p {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  .donor-cta {
-    margin-left: auto;
-    background: var(--red);
-    color: white;
-    font-family: 'Syne', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 8px 14px;
-    border-radius: 10px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    letter-spacing: 0.03em;
-  }
-
-  /* ECG decorative */
-  .ecg-bar {
-    padding: 0 24px 8px;
-    opacity: 0.35;
-  }
-
-  .ecg-bar svg { width: 100%; height: 32px; }
-
-  .ecg-path {
-    stroke: var(--cyan);
-    stroke-width: 1.5;
-    fill: none;
-    stroke-dasharray: 800;
-    stroke-dashoffset: 800;
-    animation: ecgDraw 3s linear infinite;
-  }
-
-  @keyframes ecgDraw {
-    0%   { stroke-dashoffset: 800; opacity: 0; }
-    10%  { opacity: 1; }
-    80%  { opacity: 1; }
-    100% { stroke-dashoffset: 0; opacity: 0; }
-  }
-
-  /* Bottom nav */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 420px;
-    background: rgba(10,10,15,0.92);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    padding: 10px 0 24px;
-    z-index: 50;
-  }
-
-  .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    padding: 6px 0;
-    transition: opacity 0.2s;
-  }
-
-  .nav-item:active { opacity: 0.6; }
-
-  .nav-icon {
-    font-size: 22px;
-    transition: transform 0.2s;
-  }
-
-  .nav-item.active .nav-icon { transform: scale(1.15); }
-
-  .nav-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .nav-item.active .nav-label { color: var(--red); }
-
-  .nav-indicator {
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--red);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .nav-item.active .nav-indicator { opacity: 1; }
-
-  .scroll-pad { height: 90px; }
-
-  /* Animations */
-  .fade-up {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeUp 0.5s ease forwards;
-  }
-
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .delay-1 { animation-delay: 0.05s; }
-  .delay-2 { animation-delay: 0.1s; }
-  .delay-3 { animation-delay: 0.18s; }
-  .delay-4 { animation-delay: 0.26s; }
-  .delay-5 { animation-delay: 0.34s; }
-
-  /* Onboarding Overlay */
-  .onboarding-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--bg);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .onboarding-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .onboarding-step {
-    display: none;
-    width: 100%;
-    max-width: 320px;
-    text-align: center;
-    animation: fadeUp 0.4s ease forwards;
-  }
-  .onboarding-step.active {
-    display: block;
-  }
-  .onboarding-step h2 {
-    font-family: 'Syne', sans-serif;
-    font-size: 24px;
-    margin-bottom: 12px;
-  }
-  .onboarding-step p {
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 24px;
-  }
-  .onboarding-input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 16px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-family: inherit;
-    margin-bottom: 20px;
-    outline: none;
-  }
-  .onboarding-input:focus {
-    border-color: var(--red);
-  }
-  .onboarding-btn {
-    width: 100%;
-    background: var(--red);
-    color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    cursor: pointer;
-  }
-  .onboarding-btn:active {
-    transform: scale(0.98);
-  }
-</style>
-</head>
-<body>
-
-<!-- Onboarding Overlay -->
-<div class="onboarding-overlay" id="onboardingOverlay">
-  <!-- Step 1: Name -->
-  <div class="onboarding-step active" id="onboardingStep1">
-    <h2>What's your name?</h2>
-    <p>Let's get to know you first.</p>
-    <input type="text" id="obName" class="onboarding-input" placeholder="Your full name">
-    <button class="onboarding-btn" onclick="nextOnboardingStep(2)">Next</button>
-  </div>
-  <!-- Step 2: Email -->
-  <div class="onboarding-step" id="onboardingStep2">
-    <h2>Your email address</h2>
-    <p>For important alerts and notifications.</p>
-    <input type="email" id="obEmail" class="onboarding-input" placeholder="name@example.com">
-    <button class="onboarding-btn" onclick="nextOnboardingStep(3)">Next</button>
-  </div>
-  <!-- Step 3: Phone -->
-  <div class="onboarding-step" id="onboardingStep3">
-    <h2>Phone number</h2>
-    <p>So we can reach you in emergencies.</p>
-    <input type="tel" id="obPhone" class="onboarding-input" placeholder="e.g. 9876543210">
-    <button class="onboarding-btn" onclick="nextOnboardingStep(4)">Next</button>
-  </div>
-  <!-- Step 4: Blood Group -->
-  <div class="onboarding-step" id="onboardingStep4">
-    <h2>Your blood group</h2>
-    <p>Crucial for saving lives.</p>
-    <select id="obBloodGroup" class="onboarding-input">
-      <option value="" disabled selected>Select Blood Group</option>
-      <option value="A+">A+</option>
-      <option value="A-">A-</option>
-      <option value="B+">B+</option>
-      <option value="B-">B-</option>
-      <option value="AB+">AB+</option>
-      <option value="AB-">AB-</option>
-      <option value="O+">O+</option>
-      <option value="O-">O-</option>
-    </select>
-    <button class="onboarding-btn" id="obSubmitBtn" onclick="submitOnboarding()">Finish</button>
-  </div>
-</div>
-
-<!-- Header -->
-<div class="app-header fade-up">
-  <div class="logo">HE<span>L</span>P</div>
-  <div class="header-actions">
-    <div class="icon-btn notif-dot">🔔</div>
-    <div class="account-card" id="accountCard" onclick="openAccountPanel()">
-      <div class="account-avatar" id="accountAvatar">👤</div>
-    </div>
-  </div>
-</div>
-
-<div class="account-panel-overlay" id="accountPanelOverlay" onclick="closeAccountPanel(event)">
-  <div class="account-panel" role="dialog" aria-modal="true">
-    <div class="account-panel-header">
-      <div>
-        <div class="account-panel-title">Account Details</div>
-        <div class="account-panel-label">Stored account information</div>
-      </div>
-      <button class="account-panel-close" aria-label="Close account panel" onclick="closeAccountPanel(event)">&times;</button>
-    </div>
-    <div class="account-panel-row">
-      <div>
-        <div class="account-panel-label">Name</div>
-        <div class="account-panel-value" id="panelAccountName">Guest</div>
-      </div>
-      <div>
-        <div class="account-panel-label">Blood Group</div>
-        <div class="account-panel-value" id="panelAccountBlood">N/A</div>
-      </div>
-    </div>
-    <div class="account-panel-row">
-      <div style="flex:1;">
-        <div class="account-panel-label">Email</div>
-        <div class="account-panel-value" id="panelAccountEmail">Not signed in</div>
-      </div>
-    </div>
-    <div class="account-panel-row">
-      <div style="flex:1;">
-        <div class="account-panel-label">Phone</div>
-        <div class="account-panel-value" id="panelAccountPhone">Not available</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Greeting -->
-<div class="greeting fade-up delay-1">
-  <div class="sub" id="greetingTime">Good morning</div>
-  <h1>Your health,<br><em>our mission.</em></h1>
-</div>
-
-<!-- SOS -->
-<div class="sos-zone fade-up delay-2">
-  <button class="sos-btn" onclick="sosAlert()">
-    <span class="sos-label">SOS</span>
-    <span class="sos-sub">Hold to Call</span>
-  </button>
-</div>
-
-<!-- Stats -->
-<div class="stats-strip fade-up delay-3">
-  <div class="stat-pill">
-    <div class="val red">300</div>
-    <div class="lbl">Blood Banks</div>
-  </div>
-  <div class="stat-pill">
-    <div class="val cyan" id="myBloodStat">N/A</div>
-    <div class="lbl">My Blood</div>
-  </div>
-  <div class="stat-pill">
-    <div class="val green" id="nearestStat">...</div>
-    <div class="lbl" id="nearestLbl">Donors</div>
-  </div>
-</div>
-
-<!-- ECG decoration -->
-<div class="ecg-bar fade-up delay-3">
-  <svg viewBox="0 0 370 32" preserveAspectRatio="none">
-    <path class="ecg-path" d="M0 16 L60 16 L75 16 L80 5 L85 27 L90 16 L100 16 L106 11 L110 22 L114 16 L150 16 L160 16 L165 3 L170 30 L175 16 L210 16 L220 16 L225 8 L229 24 L233 16 L370 16"/>
-  </svg>
-</div>
-
-<!-- Services -->
-<div class="section-label fade-up delay-3">Services</div>
-<div class="services-grid fade-up delay-4">
-
-  <a class="service-card" style="--accent: #FF2D3B" href="emergencycare.html">
-    <div class="card-icon">🚑</div>
-    <div class="card-title">Emergency Care</div>
-    <div class="card-desc">Nearest units, ETA & real-time dispatch</div>
-    <div class="card-arrow">→</div>
-  </a>
-
-  <a class="service-card" style="--accent: #FF4B57" href="bloodinformation.html">
-    <div class="card-icon">🩸</div>
-    <div class="card-title">Blood Info</div>
-    <div class="card-desc">Find donors & check availability</div>
-    <div class="card-arrow">→</div>
-  </a>
-
-  <a class="service-card" style="--accent: #00E5FF" href="organinformation.html">
-    <div class="card-icon">🫀</div>
-    <div class="card-title">Organ Info</div>
-    <div class="card-desc">Donor registry & transplant data</div>
-    <div class="card-arrow">→</div>
-  </a>
-
-  <a class="service-card" style="--accent: #00FF88" href="bloodbanks.html">
-    <div class="card-icon">🏥</div>
-    <div class="card-title">Blood Banks</div>
-    <div class="card-desc">Locate & navigate to care centers</div>
-    <div class="card-arrow">→</div>
-  </a>
-
-</div>
-
-<!-- Donor Banner -->
-<a class="donor-banner fade-up delay-5" href="form.html">
-  <div class="donor-icon">📋</div>
-  <div class="donor-text">
-    <h3>Become a Donor</h3>
-    <p>Register today. Save a life tomorrow.</p>
-  </div>
-  <div class="donor-cta">Register</div>
-</a>
-
-<div class="scroll-pad"></div>
-
-<!-- Bottom Nav -->
-<nav class="bottom-nav">
-  <div class="nav-item active" onclick="navTo('index')">
-    <div class="nav-indicator"></div>
-    <div class="nav-icon">🏠</div>
-    <div class="nav-label">Home</div>
-  </div>
-  <div class="nav-item" onclick="navTo('map')">
-    <div class="nav-indicator"></div>
-    <div class="nav-icon">📍</div>
-    <div class="nav-label">Map</div>
-  </div>
-  <div class="nav-item" onclick="navTo('records')">
-    <div class="nav-indicator"></div>
-    <div class="nav-icon">📋</div>
-    <div class="nav-label">Records</div>
-  </div>
-  <div class="nav-item" onclick="navTo('settings')">
-    <div class="nav-indicator"></div>
-    <div class="nav-icon">⚙️</div>
-    <div class="nav-label">Settings</div>
-  </div>
-</nav>
-
-<script>
-  // ── API Base ──
-  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-    ? 'http://localhost:3000' 
-    : '';
-
-  // ── Onboarding Logic ──
-  document.addEventListener('DOMContentLoaded', () => {
-    loadAccountInfo();
-    const isComplete = localStorage.getItem('onboardingComplete');
-    if (!isComplete) {
-      document.getElementById('onboardingOverlay').classList.add('active');
-    } else {
-      updateDashboardData();
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeLink — Admin Dashboard</title>
+  <meta name="description"
+    content="LifeLink live admin dashboard showing real-time donor registrations, blood group availability, organ pledges, and more." />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Archivo:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0608;
+      --bg2: #110c0e;
+      --surface: #1a1015;
+      --border: rgba(220, 60, 80, 0.15);
+      --red: #e8324a;
+      --red-glow: rgba(232, 50, 74, 0.3);
+      --red-dim: rgba(232, 50, 74, 0.08);
+      --amber: #f59e0b;
+      --teal: #14b8a6;
+      --lavender: #a78bfa;
+      --orange: #f97316;
+      --text: #f0e8ea;
+      --text-dim: rgba(240, 232, 234, 0.5);
+      --text-faint: rgba(240, 232, 234, 0.25);
     }
-  });
 
-  function nextOnboardingStep(step) {
-    if (step === 2 && !document.getElementById('obName').value.trim()) return alert('Please enter your name');
-    if (step === 3 && !document.getElementById('obEmail').value.trim()) return alert('Please enter your email');
-    if (step === 4 && !document.getElementById('obPhone').value.trim()) return alert('Please enter your phone number');
-    
-    document.querySelectorAll('.onboarding-step').forEach(el => el.classList.remove('active'));
-    document.getElementById(`onboardingStep${step}`).classList.add('active');
-  }
-
-  async function submitOnboarding() {
-    const name = document.getElementById('obName').value.trim();
-    const email = document.getElementById('obEmail').value.trim();
-    const phone = document.getElementById('obPhone').value.trim();
-    const bloodGroup = document.getElementById('obBloodGroup').value;
-
-    if (!bloodGroup) return alert('Please select a blood group');
-
-    const btn = document.getElementById('obSubmitBtn');
-    btn.textContent = 'Saving...';
-    btn.disabled = true;
-
-    try {
-      const payload = { name, email, phone, bloodgroup: bloodGroup, type: 'Blood' };
-      const res = await fetch(`${API_BASE}/api/donors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to register');
-
-      localStorage.setItem('userName', name);
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('userPhone', phone);
-      localStorage.setItem('userBloodGroup', bloodGroup);
-      localStorage.setItem('onboardingComplete', 'true');
-      if (data.donorId) localStorage.setItem('userId', data.donorId); // save donor ID
-
-      document.getElementById('onboardingOverlay').classList.remove('active');
-      updateDashboardData();
-    } catch (err) {
-      alert('Error: ' + err.message);
-      btn.textContent = 'Finish';
-      btn.disabled = false;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-  }
 
-  async function updateDashboardData() {
-    await loadAccountInfo();
+    html {
+      scroll-behavior: smooth;
+    }
 
-    // Set My Blood
-    const bg = localStorage.getItem('userBloodGroup') || 'N/A';
-    document.getElementById('myBloodStat').textContent = bg;
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Archivo', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(232, 50, 74, 0.12) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(232, 50, 74, 0.03) 60px, rgba(232, 50, 74, 0.03) 61px),
+        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(232, 50, 74, 0.03) 60px, rgba(232, 50, 74, 0.03) 61px);
+    }
 
-    // Fetch total donors
-    try {
-      const res = await fetch(`${API_BASE}/api/stats`);
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('nearestStat').textContent = data.total_donors;
-      } else {
-        document.getElementById('nearestStat').textContent = 'N/A';
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 6, 8, 0.85);
+      backdrop-filter: blur(20px);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo .pulse {
+      color: var(--red);
+      animation: beat 1.2s ease infinite;
+      display: inline-block;
+    }
+
+    @keyframes beat {
+
+      0%,
+      100% {
+        transform: scale(1)
       }
-    } catch (e) {
-      document.getElementById('nearestStat').textContent = '-';
+
+      50% {
+        transform: scale(1.25)
+      }
     }
-  }
 
-  // ── Account display in header ──
-  async function loadAccountInfo() {
-    let name = localStorage.getItem('userName') || localStorage.getItem('name') || '';
-    let email = localStorage.getItem('userEmail') || localStorage.getItem('email') || '';
-    let phone = localStorage.getItem('userPhone') || localStorage.getItem('phone') || '';
-    let blood = localStorage.getItem('userBloodGroup') || localStorage.getItem('bloodgroup') || '';
-    const userId = localStorage.getItem('userId');
+    .logo span {
+      color: var(--text-dim);
+      font-family: 'Archivo', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-left: 4px;
+    }
 
-    if ((!name || !email || !phone || !blood) && userId) {
+    nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    nav a {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--red);
+      background: var(--red-dim);
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--teal);
+      padding: 6px 12px;
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 20px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: blink 1.5s ease infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.2
+      }
+    }
+
+    /* ── HERO ────────────────────────────────────────── */
+    .hero {
+      padding: 64px 48px 48px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-title em {
+      color: var(--red);
+      font-style: italic;
+    }
+
+    .hero-sub {
+      margin-top: 12px;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      font-weight: 300;
+      max-width: 460px;
+      line-height: 1.6;
+    }
+
+    .timestamp {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      text-align: right;
+    }
+
+    /* ── LAYOUT ──────────────────────────────────────── */
+    main {
+      padding: 0 48px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* ── LOADING OVERLAY ─────────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      transition: opacity 0.5s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-pulse {
+      font-size: 3rem;
+      animation: beat 0.8s ease infinite;
+    }
+
+    .loader-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* ── ERROR BANNER ────────────────────────────────── */
+    .error-banner {
+      display: none;
+      background: rgba(232, 50, 74, 0.1);
+      border: 1px solid rgba(232, 50, 74, 0.4);
+      border-radius: 10px;
+      padding: 16px 24px;
+      margin: 0 48px;
+      font-size: 0.85rem;
+      color: var(--red);
+      text-align: center;
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+
+    /* ── STAT CARDS ──────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, var(--accent-glow, rgba(232, 50, 74, 0.08)), transparent 70%);
+      pointer-events: none;
+    }
+
+    .stat-card.teal {
+      --accent-glow: rgba(20, 184, 166, 0.1);
+    }
+
+    .stat-card.amber {
+      --accent-glow: rgba(245, 158, 11, 0.1);
+    }
+
+    .stat-card.lavender {
+      --accent-glow: rgba(167, 139, 250, 0.1);
+    }
+
+    .stat-card.orange {
+      --accent-glow: rgba(249, 115, 22, 0.15);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .stat-number {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3.2rem);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-number.red {
+      color: var(--red);
+    }
+
+    .stat-number.teal {
+      color: var(--teal);
+    }
+
+    .stat-number.amber {
+      color: var(--amber);
+    }
+
+    .stat-number.lavender {
+      color: var(--lavender);
+    }
+
+    .stat-number.orange {
+      color: var(--orange);
+    }
+
+    .stat-delta {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .stat-icon {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 2rem;
+      opacity: 0.12;
+    }
+
+    .progress-bar-wrap {
+      margin-top: 14px;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.06);
+      height: 3px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1.5s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    /* ── SECTION HEADING ─────────────────────────────── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .section-head h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-head .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--red);
+      background: var(--red-dim);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(232, 50, 74, 0.25);
+    }
+
+    /* ── BLOOD DONORS ────────────────────────────────── */
+    .blood-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .blood-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+
+    .blood-card:hover {
+      border-color: rgba(232, 50, 74, 0.5);
+      transform: scale(1.03);
+    }
+
+    .blood-type-label {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      color: var(--red);
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 0 40px var(--red-glow);
+    }
+
+    .blood-donors-count {
+      font-size: 1.4rem;
+      font-weight: 900;
+    }
+
+    .blood-donors-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .blood-bar {
+      margin-top: 12px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .blood-bar-fill {
+      height: 100%;
+      background: var(--red);
+      border-radius: 2px;
+      transition: width 1.5s cubic-bezier(.16, 1, .3, 1);
+      width: 0%;
+    }
+
+    /* ── DONATION TYPE BREAKDOWN ──────────────────────── */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .type-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+
+    .type-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .type-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .type-count {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.8rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--red);
+    }
+
+    .type-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-top: 8px;
+    }
+
+    /* ── RECENT REGISTRATIONS TABLE ───────────────────── */
+    .admin-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .admin-table th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-table td {
+      padding: 16px 20px;
+      font-size: 0.82rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .admin-table tr:hover td {
+      background: rgba(232, 50, 74, 0.03);
+    }
+
+    .table-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 10px;
+      vertical-align: middle;
+      background: rgba(232, 50, 74, 0.2);
+      color: var(--red);
+    }
+
+    .type-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .type-blood {
+      background: rgba(232, 50, 74, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(232, 50, 74, 0.3);
+    }
+
+    .type-organ {
+      background: rgba(20, 184, 166, 0.12);
+      color: var(--teal);
+      border: 1px solid rgba(20, 184, 166, 0.25);
+    }
+
+    .type-both {
+      background: rgba(167, 139, 250, 0.12);
+      color: var(--lavender);
+      border: 1px solid rgba(167, 139, 250, 0.25);
+    }
+
+    .bg-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .empty-row td {
+      text-align: center;
+      color: var(--text-faint);
+      padding: 40px;
+    }
+
+    /* ── CITY DISTRIBUTION ───────────────────────────── */
+    .city-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .city-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .city-name {
+      font-size: 0.82rem;
+      min-width: 120px;
+    }
+
+    .city-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .city-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), rgba(20, 184, 166, 0.4));
+      border-radius: 4px;
+      width: 0%;
+      transition: width 1.5s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .city-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────── */
+    footer {
+      margin-top: 16px;
+      padding: 28px 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── ANIMATIONS ──────────────────────────────────── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .stat-card,
+    .type-card,
+    .blood-card,
+    .admin-table-wrap {
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @media(max-width:700px) {
+      header {
+        padding: 16px 20px;
+      }
+
+      .logo {
+        font-size: 1.2rem;
+      }
+
+      .hero {
+        padding: 32px 20px 24px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-title {
+        font-size: 2.4rem;
+      }
+
+      .timestamp {
+        text-align: left;
+        margin-top: 12px;
+      }
+
+      main {
+        padding: 0 20px 60px;
+        gap: 32px;
+      }
+
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .stat-number {
+        font-size: 2.2rem;
+      }
+
+      .section-head h2 {
+        font-size: 1.3rem;
+      }
+
+      .admin-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .admin-table {
+        min-width: 600px;
+      }
+
+      .admin-table th, .admin-table td {
+        padding: 12px 14px;
+        font-size: 0.75rem;
+      }
+
+      footer {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+      }
+
+      nav {
+        display: none;
+      }
+
+      .error-banner {
+        margin: 0 20px;
+      }
+    }
+
+    /* Small phones extra fix */
+    @media(max-width:400px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      .blood-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* ── AUTH OVERLAY ────────────────────────────────── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0f172a;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      touch-action: none;
+      overflow: hidden;
+    }
+    .auth-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .auth-card {
+      background: #1e293b;
+      border-radius: 24px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .auth-icon-wrap {
+      margin: 0 auto 20px;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.5);
+    }
+    .auth-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+    .auth-subtitle {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Archivo', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fingerprint-btn {
+      background: #334155;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .fingerprint-btn .emoji {
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
+    }
+    .fingerprint-btn:hover {
+      background: #3f3f46;
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px 0;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #334155;
+    }
+    .auth-divider span {
+      padding: 0 10px;
+    }
+    .auth-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid #ea580c;
+      border-radius: 12px;
+      padding: 16px;
+      color: #f8fafc;
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 16px;
+      outline: none;
+      letter-spacing: 0.2em;
+    }
+    .auth-input::placeholder {
+      color: #64748b;
+      letter-spacing: 0.05em;
+    }
+    .auth-input:focus {
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.3);
+    }
+    .unlock-btn {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .unlock-btn:hover {
+      box-shadow: 0 10px 20px -5px rgba(234, 88, 12, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Hide fingerprint biometric on desktop devices */
+    @media (min-width: 769px) {
+      #fingerprintBtn {
+        display: none !important;
+      }
+    }
+
+    .face-btn {
+      background: #312e81;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .face-btn .emoji {
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+    }
+    .face-btn:hover {
+      background: #3730a3;
+    }
+
+    /* ── FACE SCAN MODAL ────────────────────────────── */
+    .face-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 20000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .face-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .face-modal-content {
+      background: #1e293b;
+      border-radius: 24px;
+      padding: 30px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .face-scanner-container {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #6366f1;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+      background: #0f172a;
+    }
+    #faceVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    .face-reticle {
+      position: absolute;
+      inset: 15px;
+      border: 2px dashed rgba(99, 102, 241, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: rotate-reticle 10s linear infinite;
+    }
+    @keyframes rotate-reticle {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .face-laser {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(to bottom, rgba(99, 102, 241, 0), #6366f1, rgba(99, 102, 241, 0));
+      box-shadow: 0 0 10px #6366f1;
+      pointer-events: none;
+      animation: laser-move 2s ease-in-out infinite;
+    }
+    @keyframes laser-move {
+      0%, 100% { top: 10%; }
+      50% { top: 90%; }
+    }
+    .face-status {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      min-height: 24px;
+    }
+    .cancel-btn {
+      background: #475569;
+      color: #f8fafc;
+    }
+    .cancel-btn:hover {
+      background: #64748b;
+    }
+
+    /* ── HAMBURGER BUTTON ────────────────────────────── */
+    .hamburger-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 10001; /* Must sit above header and sidebar overlay */
+      padding: 0;
+    }
+
+    .hamburger-btn span {
+      display: block;
+      width: 100%;
+      height: 2px;
+      background-color: var(--text);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 2px;
+    }
+
+    .hamburger-btn.active span:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+      background-color: var(--red);
+    }
+
+    .hamburger-btn.active span:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+
+    .hamburger-btn.active span:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+      background-color: var(--red);
+    }
+
+    /* ── SIDEBAR DRAWER ──────────────────────────────── */
+    .sidebar-drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 320px;
+      height: 100vh;
+      background: rgba(16, 10, 13, 0.96);
+      backdrop-filter: blur(30px);
+      border-left: 1px solid var(--border);
+      z-index: 9999;
+      transition: right 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 50px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .sidebar-drawer.active {
+      right: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(220, 60, 80, 0.15);
+      padding-bottom: 20px;
+    }
+
+    .sidebar-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sidebar-links a {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 14px 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.25s ease;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .sidebar-links a:hover {
+      color: var(--text);
+      background: var(--red-dim);
+      border-color: rgba(232, 50, 74, 0.2);
+      transform: translateX(6px);
+    }
+
+    .sidebar-links a .icon {
+      font-size: 1.25rem;
+      transition: transform 0.2s;
+    }
+
+    .sidebar-links a:hover .icon {
+      transform: scale(1.2);
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 9998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @media(max-width:700px) {
+      .hamburger-btn {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+
+<body style="overflow: hidden;">
+
+  <!-- AUTH OVERLAY -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-icon-wrap">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <h2 class="auth-title">Admin Center</h2>
+      <p class="auth-subtitle">Secure access required</p>
+
+      <button class="auth-btn fingerprint-btn" id="fingerprintBtn" style="margin-bottom: 12px;">
+        <span class="emoji">👆</span>
+        Use Fingerprint
+      </button>
+
+      <button class="auth-btn face-btn" id="faceBtn">
+        <span class="emoji">👤</span>
+        Use Face Scan
+      </button>
+
+      <div class="auth-divider">
+        <span>OR ENTER PIN</span>
+      </div>
+
+      <input type="password" class="auth-input" id="pinInput" placeholder="Secure PIN" />
+      <button class="auth-btn unlock-btn" id="unlockBtn">UNLOCK DASHBOARD</button>
+    </div>
+  </div>
+
+  <!-- FACE SCAN MODAL -->
+  <div class="face-modal" id="faceModal">
+    <div class="face-modal-content">
+      <div class="face-scanner-container">
+        <video id="faceVideo" autoplay playsinline muted></video>
+        <div class="face-reticle"></div>
+        <div class="face-laser"></div>
+      </div>
+      <div class="face-status" id="faceStatus">Align your face inside the circle</div>
+      <button class="auth-btn cancel-btn" id="closeFaceBtn">Cancel</button>
+    </div>
+  </div>
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-pulse">🩸</div>
+    <div class="loader-text">Fetching live data from database…</div>
+  </div>
+
+  <!-- SIDEBAR DRAWER -->
+  <div class="sidebar-drawer" id="sidebarDrawer">
+    <div class="sidebar-header">
+      <div class="logo" style="font-size: 1.4rem;">
+        <span class="pulse">♥</span> LifeLink
+      </div>
+    </div>
+    <div class="sidebar-links">
+      <a href="#overview"><span class="icon">👥</span> Overview</a>
+      <a href="#blood"><span class="icon">🩸</span> Blood Groups</a>
+      <a href="#types"><span class="icon">🫀</span> Donation Types</a>
+      <a href="#recent"><span class="icon">🕒</span> Recent</a>
+      <a href="#users"><span class="icon">👤</span> Registered Users</a>
+      <a href="#cities"><span class="icon">📍</span> Cities</a>
+    </div>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- HEADER -->
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <span class="pulse">♥</span> LifeLink
+      <span>Admin Portal</span>
+    </div>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#blood">Blood</a>
+      <a href="#types">Types</a>
+      <a href="#recent">Recent</a>
+      <a href="#users">Users</a>
+      <a href="#cities">Cities</a>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div class="live-badge">
+        <div class="live-dot"></div>LIVE DB
+      </div>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle Navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ERROR BANNER -->
+  <div class="error-banner" id="errorBanner">
+    ⚠️ Could not connect to database server. Make sure the server is running on port 3000.
+    <br /><small style="color:var(--text-dim)">Run: <code style="color:var(--amber)">npm start</code> in your project
+      folder</small>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <h1 class="hero-title">Live <em>Database</em><br />Dashboard</h1>
+      <p class="hero-sub">Real-time overview of donor registrations pulled directly from your PostgreSQL database.</p>
+    </div>
+    <div class="timestamp" id="syncTime">Fetching…</div>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- OVERVIEW STATS -->
+    <section id="overview">
+      <div class="section-head">
+        <h2>Overview</h2><span class="tag" id="totalTag">LOADING…</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card" id="card-total">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Total Registered Donors</div>
+          <div class="stat-number red" id="stat-total">—</div>
+          <div class="stat-delta" id="stat-total-sub">Loading from database…</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="bar-total" style="width:0%;background:var(--red)"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card teal" id="card-blood">
+          <div class="stat-icon">🩸</div>
+          <div class="stat-label">Blood Donors</div>
+          <div class="stat-number teal" id="stat-blood">—</div>
+          <div class="stat-delta" id="stat-blood-sub">Loading…</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="bar-blood" style="width:0%;background:var(--teal)"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card amber" id="card-organ">
+          <div class="stat-icon">🫀</div>
+          <div class="stat-label">Organ Donors</div>
+          <div class="stat-number amber" id="stat-organ">—</div>
+          <div class="stat-delta" id="stat-organ-sub">Loading…</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="bar-organ" style="width:0%;background:var(--amber)"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card lavender" id="card-both">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Blood + Organ Donors</div>
+          <div class="stat-number lavender" id="stat-both">—</div>
+          <div class="stat-delta" id="stat-both-sub">Loading…</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="bar-both" style="width:0%;background:var(--lavender)"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card orange" id="card-users">
+          <div class="stat-icon">👤</div>
+          <div class="stat-label">Registered Users</div>
+          <div class="stat-number orange" id="stat-users">—</div>
+          <div class="stat-delta" id="stat-users-sub">Loading…</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="bar-users" style="width:0%;background:var(--orange)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOOD DONORS BY TYPE -->
+    <section id="blood">
+      <div class="section-head">
+        <h2>Blood Donors by Group</h2><span class="tag" id="bloodTag">LOADING…</span>
+      </div>
+      <div class="blood-grid" id="bloodGrid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- DONATION TYPES -->
+    <section id="types">
+      <div class="section-head">
+        <h2>Donation Type Breakdown</h2><span class="tag">LIVE</span>
+      </div>
+      <div class="type-grid" id="typeGrid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- RECENT REGISTRATIONS -->
+    <section id="recent">
+      <div class="section-head">
+        <h2>Recent Registrations</h2><span class="tag" id="recentTag">LOADING…</span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Donor</th>
+              <th>Contact</th>
+              <th>Type</th>
+              <th>Blood Group</th>
+              <th>City</th>
+              <th>Stats</th>
+              <th>Biometric</th>
+              <th>Registered On</th>
+              <th>Donor ID</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recentTableBody">
+            <tr>
+              <td colspan="6" style="text-align:center;color:var(--text-faint);padding:30px;">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    
+    <!-- EMERGENCY REQUESTS -->
+    <section id="requests">
+      <div class="section-head">
+        <h2>Live Emergency Requests</h2><span class="tag" id="requestsTag">LOADING…</span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Requester</th>
+              <th>Donor ID</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th>Requested On</th>
+            </tr>
+          </thead>
+          <tbody id="requestsTableBody">
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--text-faint);padding:30px;">No emergency requests logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REGISTERED USERS -->
+    <section id="users">
+      <div class="section-head">
+        <h2>Registered Users</h2><span class="tag" id="usersTag">LOADING…</span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Contact Info</th>
+              <th>Created At</th>
+              <th>User ID</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="4" style="text-align:center;color:var(--text-faint);padding:30px;">Loading users…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CITY DISTRIBUTION -->
+    <section id="cities">
+      <div class="section-head">
+        <h2>City-wise Distribution</h2><span class="tag">TOP 20</span>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;">
+        <div class="city-list" id="cityList">
+          <div style="color:var(--text-faint);font-size:0.82rem;">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 LifeLink · Admin Dashboard v3.3.0</span>
+    <span id="footerDb">Data source: PostgreSQL</span>
+    <span>Build: <span style="color:var(--red)">LIVE-DB</span></span>
+  </footer>
+
+  <script>
+    const API = (
+      window.location.protocol === 'file:' ||
+      !window.location.hostname ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    ) ? 'http://localhost:3000' : '';
+
+
+    /* ── Utility ── */
+    function fmt(n) {
+      return Number(n).toLocaleString('en-IN');
+    }
+
+    function animateCount(el, target) {
+      const num = parseInt(String(target).replace(/[^0-9]/g, ''));
+      if (isNaN(num) || num < 1) { el.textContent = fmt(target || 0); return; }
+      let start = null;
+      const duration = 1200;
+      const step = (ts) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = fmt(Math.floor(eased * num));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function setBar(id, pct) {
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.style.width = Math.min(pct, 100) + '%';
+      }, 300);
+    }
+
+    /* ── Blood group colour helper ── */
+    const BG_ORDER = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'N/A'];
+
+    /* ── Type icon map ── */
+    const TYPE_ICON = {
+      'Blood': '🩸',
+      'Organ': '🫀',
+      'Both': '❤️‍🩹',
+      'blood': '🩸',
+      'organ': '🫀',
+      'both': '❤️‍🩹',
+    };
+
+    /* ── Main data fetch ── */
+    async function loadDashboard() {
       try {
-        const res = await fetch(`${API_BASE}/api/donor/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          const donor = data.donor || {};
-          name = name || donor.name || '';
-          email = email || donor.email || '';
-          phone = phone || donor.phone || '';
-          blood = blood || donor.bloodgroup || donor.bloodGroup || '';
+        const [statsRes, bloodRes, typeRes, recentRes, cityRes, requestsRes, usersRes] = await Promise.all([
+          fetch(`${API}/api/stats`),
+          fetch(`${API}/api/dashboard/blood-groups`),
+          fetch(`${API}/api/dashboard/donation-types`),
+          fetch(`${API}/api/donors/recent?limit=100`),
+          fetch(`${API}/api/dashboard/cities`),
+          fetch(`${API}/api/requests`),
+          fetch(`${API}/api/users`),
+        ]);
 
-          if (name) localStorage.setItem('userName', name);
-          if (email) localStorage.setItem('userEmail', email);
-          if (phone) localStorage.setItem('userPhone', phone);
-          if (blood) localStorage.setItem('userBloodGroup', blood);
+        const stats = await statsRes.json();
+        const blood = await bloodRes.json();
+        const types = await typeRes.json();
+        const recent = await recentRes.json();
+        const cities = await cityRes.json();
+        const requests = await requestsRes.json();
+        const usersData = await usersRes.json();
+
+
+        /* Hide loading overlay */
+        document.getElementById('loadingOverlay').classList.add('hidden');
+
+        /* Update sync time */
+        const now = new Date();
+        document.getElementById('syncTime').innerHTML =
+          `Last synced<br/><strong style="color:var(--text)">${now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} — ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} IST</strong>`;
+
+        renderStats(stats);
+        renderBloodGroups(blood.blood_group_availability || []);
+        renderTypes(types.donation_type_breakdown || []);
+        renderRecent(recent.donors || []);
+        renderCities(cities.city_wise_distribution || []);
+        renderRequests(requests.requests || []);
+        renderUsers(usersData.users || []);
+
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('errorBanner').classList.add('visible');
+      }
+    }
+
+    /* ── Render: Overview stats ── */
+    function renderStats(stats) {
+      const byType = {};
+      if (stats.by_type) {
+        stats.by_type.forEach(r => {
+          byType[(r.type || '').toLowerCase()] = Number(r.count);
+        });
+      }
+
+      const total = Number(stats.total_donors || 0);
+      const blood = byType['blood'] || 0;
+      const organ = byType['organ'] || 0;
+      const both = byType['both'] || 0;
+
+      document.getElementById('totalTag').textContent = fmt(total) + ' TOTAL';
+      animateCount(document.getElementById('stat-total'), total);
+      animateCount(document.getElementById('stat-blood'), blood);
+      animateCount(document.getElementById('stat-organ'), organ);
+      animateCount(document.getElementById('stat-both'), both);
+
+      document.getElementById('stat-total-sub').innerHTML = `<span style="color:var(--teal)">Live from PostgreSQL</span>`;
+      document.getElementById('stat-blood-sub').innerHTML = blood > 0 ? `${((blood / total) * 100).toFixed(1)}% of total donors` : 'No blood donors yet';
+      document.getElementById('stat-organ-sub').innerHTML = organ > 0 ? `${((organ / total) * 100).toFixed(1)}% of total donors` : 'No organ donors yet';
+      document.getElementById('stat-both-sub').innerHTML = both > 0 ? `${((both / total) * 100).toFixed(1)}% of total donors` : 'No combined donors yet';
+
+      if (total > 0) {
+        setBar('bar-total', 100);
+        setBar('bar-blood', (blood / total) * 100);
+        setBar('bar-organ', (organ / total) * 100);
+        setBar('bar-both', (both / total) * 100);
+      }
+    }
+
+    /* ── Render: Blood groups ── */
+    function renderBloodGroups(data) {
+      const grid = document.getElementById('bloodGrid');
+      grid.innerHTML = '';
+
+      /* Map into lookup */
+      const map = {};
+      data.forEach(r => { map[r.blood_group] = Number(r.donor_count); });
+
+      const maxCount = Math.max(1, ...data.map(r => Number(r.donor_count)));
+      const totalBlood = data.reduce((s, r) => s + Number(r.donor_count), 0);
+
+      document.getElementById('bloodTag').textContent = fmt(totalBlood) + ' TOTAL';
+
+      /* Render all 8 standard blood groups (0 if missing) */
+      const groups = BG_ORDER.length > 0 && data.length > 0
+        ? BG_ORDER
+        : Object.keys(map).sort();
+
+      (groups.length ? groups : Object.keys(map)).forEach(bg => {
+        const cnt = map[bg] || 0;
+        const pct = maxCount > 0 ? (cnt / maxCount) * 100 : 0;
+        const card = document.createElement('div');
+        card.className = 'blood-card';
+        card.innerHTML = `
+        <div class="blood-type-label">${bg}</div>
+        <div class="blood-donors-count">${fmt(cnt)}</div>
+        <div class="blood-donors-label">Donors</div>
+        <div class="blood-bar"><div class="blood-bar-fill" style="width:0%" data-pct="${pct.toFixed(1)}"></div></div>
+      `;
+        grid.appendChild(card);
+      });
+
+      /* Animate bars */
+      setTimeout(() => {
+        grid.querySelectorAll('.blood-bar-fill').forEach(el => {
+          el.style.width = el.dataset.pct + '%';
+        });
+      }, 300);
+    }
+
+    /* ── Render: Donation type breakdown ── */
+    function renderTypes(data) {
+      const grid = document.getElementById('typeGrid');
+      grid.innerHTML = '';
+
+      if (!data.length) {
+        grid.innerHTML = '<div style="color:var(--text-faint);font-size:0.85rem;padding:20px;">No data yet. Register donors to see the breakdown.</div>';
+        return;
+      }
+
+      data.forEach(r => {
+        const label = r.donation_type || 'Unknown';
+        const icon = TYPE_ICON[label] || '❓';
+        const cnt = Number(r.donor_count);
+
+        const card = document.createElement('div');
+        card.className = 'type-card';
+        card.innerHTML = `
+        <span class="type-icon">${icon}</span>
+        <div class="type-count">${fmt(cnt)}</div>
+        <div class="type-label">${label} Donors</div>
+      `;
+        grid.appendChild(card);
+      });
+    }
+
+    /* ── Render: Recent table ── */
+    function renderRecent(donors) {
+      const tbody = document.getElementById('recentTableBody');
+      tbody.innerHTML = '';
+
+      document.getElementById('recentTag').textContent = donors.length + ' SHOWN';
+
+      if (!donors.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No registrations yet. Be the first to register!</td></tr>';
+        return;
+      }
+
+      donors.forEach(d => {
+        const initials = (d.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const typeKey = (d.type || '').toLowerCase();
+        const badgeCls = typeKey === 'blood' ? 'type-blood' : typeKey === 'organ' ? 'type-organ' : 'type-both';
+        
+        const hasBio = d.biometric && d.biometric !== 'null';
+        const bioTag = hasBio 
+          ? '<span class="type-badge type-organ" style="background:rgba(20,184,166,0.1);color:var(--teal)">✓ ACTIVE</span>'
+          : '<span class="type-badge" style="background:rgba(255,255,255,0.05);color:var(--text-faint)">NONE</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <td><span class="table-avatar">${initials}</span>${d.name || '—'}</td>
+        <td>
+          <div style="font-size:0.8rem;font-weight:600">${d.phone || '—'}</div>
+          <div style="font-size:0.65rem;color:var(--text-dim)">${d.email || '—'}</div>
+        </td>
+        <td><span class="type-badge ${badgeCls}">${d.type || '—'}</span></td>
+        <td>${d.bloodgroup ? `<span class="bg-pill">${d.bloodgroup}</span>` : '<span style="color:var(--text-faint)">—</span>'}</td>
+        <td>${d.city || '—'}</td>
+        <td>
+          <div style="font-size:0.8rem;color:var(--red);font-weight:700">D: ${d.donated_count || 0}</div>
+          <div style="font-size:0.7rem;color:var(--text-dim)">R: ${d.received_count || 0}</div>
+        </td>
+        <td>${bioTag}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text-dim)">${d.registeredOn || '—'}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-faint)">${d.donorId || '—'}</td>
+        <td>
+          <button onclick="deleteDonor('${d.donorId}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:0.8rem;" title="Delete Donor">🗑️</button>
+        </td>
+      `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ── Render: Emergency requests ── */
+    function renderRequests(requests) {
+      const tbody = document.getElementById('requestsTableBody');
+      const tag = document.getElementById('requestsTag');
+      tbody.innerHTML = '';
+      
+      tag.textContent = requests.length + ' RECENT';
+
+      if (!requests.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No emergency requests logged yet.</td></tr>';
+        return;
+      }
+
+      requests.forEach(r => {
+        const date = new Date(r.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${r.requesterName}</strong></td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.75rem">${r.donorId}</td>
+          <td><span class="type-badge ${r.requestType === 'Blood' ? 'type-blood' : 'type-organ'}">${r.requestType}</span></td>
+          <td style="font-size:0.75rem;max-width:200px;color:var(--text-dim)">${r.details || '—'}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.75rem">${date}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ── Render: City distribution ── */
+    function renderCities(data) {
+      const list = document.getElementById('cityList');
+      list.innerHTML = '';
+
+      if (!data.length) {
+        list.innerHTML = '<div style="color:var(--text-faint);font-size:0.82rem;">No city data available yet.</div>';
+        return;
+      }
+
+      const maxCnt = Math.max(1, ...data.map(r => Number(r.donor_count)));
+
+      data.forEach(r => {
+        const cnt = Number(r.donor_count);
+        const pct = (cnt / maxCnt) * 100;
+        const row = document.createElement('div');
+        row.className = 'city-row';
+        row.innerHTML = `
+        <span class="city-name">${r.city || 'Unknown'}</span>
+        <div class="city-bar-wrap"><div class="city-bar-fill" data-pct="${pct.toFixed(1)}"></div></div>
+        <span class="city-count">${fmt(cnt)}</span>
+      `;
+        list.appendChild(row);
+      });
+
+      setTimeout(() => {
+        list.querySelectorAll('.city-bar-fill').forEach(el => {
+          el.style.width = el.dataset.pct + '%';
+        });
+      }, 300);
+    }
+
+    /* ── Render: Users table ── */
+    function renderUsers(usersList) {
+      const tbody = document.getElementById('usersTableBody');
+      const tag = document.getElementById('usersTag');
+      tbody.innerHTML = '';
+
+      tag.textContent = usersList.length + ' USERS';
+
+      // Update stat card for users
+      const totalUsers = usersList.length;
+      animateCount(document.getElementById('stat-users'), totalUsers);
+      document.getElementById('stat-users-sub').innerHTML = `<span style="color:var(--orange)">Registered system users</span>`;
+      setBar('bar-users', 100);
+
+      if (!usersList.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No registered users in database.</td></tr>';
+        return;
+      }
+
+      usersList.forEach(u => {
+        const initials = (u.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="table-avatar" style="background:rgba(249, 115, 22, 0.2);color:var(--orange)">${initials}</span><strong>${u.name || '—'}</strong></td>
+          <td>
+            <div style="font-size:0.8rem;font-weight:600">${u.phone || '—'}</div>
+            <div style="font-size:0.65rem;color:var(--text-dim)">${u.email || '—'}</div>
+          </td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text-dim)">${date}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-faint)">USR-${u.id}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ── Action: Delete Donor ── */
+    async function deleteDonor(id) {
+      if (!confirm(`Are you sure you want to delete donor ${id}?`)) return;
+      try {
+        const res = await fetch(`${API}/api/donors/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ donorId: id })
+        });
+        if (res.ok) {
+          loadDashboard();
+        } else {
+          alert('Failed to delete donor.');
         }
       } catch (err) {
-        console.warn('Unable to load donor info from API:', err);
+        console.error('Delete error:', err);
+        alert('Error connecting to server.');
       }
     }
 
-    const displayName = name || 'Guest';
-    const displayEmail = email || 'Not signed in';
-    const displayPhone = phone || 'Not available';
-    const displayBlood = blood || 'N/A';
-    const avatar = displayName !== 'Guest' ? displayName.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() : 'U';
+    /* ── AUTHENTICATION LOGIC ── */
+    const ADMIN_PIN = "OSVJA@123";
 
-    const accNameEl = document.getElementById('accountName');
-    const accEmailEl = document.getElementById('accountEmail');
-    const accAvatarEl = document.getElementById('accountAvatar');
-    if (accNameEl) accNameEl.textContent = displayName;
-    if (accEmailEl) accEmailEl.textContent = displayEmail;
-    if (accAvatarEl) accAvatarEl.textContent = avatar;
-
-    document.getElementById('panelAccountName').textContent = displayName;
-    document.getElementById('panelAccountEmail').textContent = displayEmail;
-    document.getElementById('panelAccountPhone').textContent = displayPhone;
-    document.getElementById('panelAccountBlood').textContent = displayBlood;
-  }
-
-  function renderAccountInfo() {
-    loadAccountInfo();
-  }
-
-  function openAccountPanel() {
-    renderAccountInfo();
-    document.getElementById('accountPanelOverlay').classList.add('open');
-  }
-
-  function closeAccountPanel(event) {
-    event.stopPropagation();
-    if (event.target.id === 'accountPanelOverlay' || event.target.closest('.account-panel-close')) {
-      document.getElementById('accountPanelOverlay').classList.remove('open');
+    function unlockDashboard() {
+      document.getElementById('authOverlay').classList.add('hidden');
+      document.body.style.overflow = '';
+      window.location.href = 'home.html';
     }
-  }
 
-  // ── Get user ID from localStorage ──
-  function getUserId() {
-    return localStorage.getItem('userId') || null;
-  }
+    // PIN Unlock
+    document.getElementById('unlockBtn').addEventListener('click', () => {
+      const pin = document.getElementById('pinInput').value;
+      if (pin === ADMIN_PIN) {
+        unlockDashboard();
+      } else {
+        alert("Incorrect PIN.");
+        document.getElementById('pinInput').value = '';
+      }
+    });
 
-  // ── Dynamic greeting based on real time ──
-  function updateGreeting() {
-    const hour = new Date().getHours();
-    let text;
-    if (hour >= 5 && hour < 12)       text = 'Good Morning';
-    else if (hour >= 12 && hour < 17) text = 'Good Afternoon';
-    else if (hour >= 17 && hour < 21) text = 'Good Evening';
-    else                               text = 'Good Night';
-    document.getElementById('greetingTime').textContent = text;
-  }
-
-  updateGreeting();
-  setInterval(updateGreeting, 60000);
-
-  // ── SOS Button - Navigate to Emergency Care ──
-  function sosAlert() {
-    window.location.href = 'emergencycare.html';
-  }
-
-  // ── Bottom nav active state with real navigation ──
-  function navTo(page) {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    
-    switch(page) {
-      case 'index':
-        window.location.href = 'index.html';
-        break;
-      case 'map':
-        window.location.href = 'map.html';
-        break;
-      case 'records':
-        window.location.href = 'records.html';
-        break;
-      case 'settings':
-        window.location.href = 'settings.html';
-        break;
+    // Helper functions for WebAuthn base64url encoding/decoding
+    function bufferToBase64url(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let str = '';
+      for (let charCode of bytes) {
+        str += String.fromCharCode(charCode);
+      }
+      const base64String = btoa(str);
+      return base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
-  }
 
-  // ── Donor banner - navigate to form ──
-  document.querySelector('.donor-banner')?.addEventListener('click', () => {
-    window.location.href = 'form.html';
-  });
-</script>
+    function base64urlToBuffer(base64url) {
+      const padding = '='.repeat((4 - base64url.length % 4) % 4);
+      const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      const buffer = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        buffer[i] = rawData.charCodeAt(i);
+      }
+      return buffer.buffer;
+    }
+
+    // Fingerprint Button logic
+    document.getElementById('fingerprintBtn').addEventListener('click', async () => {
+      if (!window.PublicKeyCredential) {
+        alert("Biometrics not supported on this device/browser.");
+        return;
+      }
+
+      const existingCredId = localStorage.getItem('admin_bio_cred_id');
+
+      if (!existingCredId) {
+        // FIRST TIME REGISTRATION
+        let pin = document.getElementById('pinInput').value;
+        if (pin !== ADMIN_PIN) {
+          pin = prompt("First-time setup: Please enter the Admin PIN to register your fingerprint:");
+        }
+        if (pin !== ADMIN_PIN) {
+          if (pin !== null && pin !== '') alert("Incorrect PIN. Biometric registration denied.");
+          return;
+        }
+
+        try {
+          const userId = new Uint8Array(16);
+          crypto.getRandomValues(userId);
+
+          const publicKeyCredentialCreationOptions = {
+            challenge: new Uint8Array(32), // dummy challenge
+            rp: {
+              name: "Admin Dashboard",
+            },
+            user: {
+              id: userId,
+              name: "admin",
+              displayName: "Admin",
+            },
+            pubKeyCredParams: [
+              { alg: -7, type: "public-key" }, // ES256
+              { alg: -257, type: "public-key" } // RS256
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: "platform",
+              userVerification: "required"
+            },
+            timeout: 60000,
+            attestation: "none"
+          };
+
+          const credential = await navigator.credentials.create({
+            publicKey: publicKeyCredentialCreationOptions
+          });
+
+          // Save credential ID to allow subsequent logins
+          localStorage.setItem('admin_bio_cred_id', bufferToBase64url(credential.rawId));
+          alert("Fingerprint registered successfully!");
+          unlockDashboard();
+
+        } catch (err) {
+          console.error("Biometric registration failed:", err);
+          alert("Registration failed or cancelled.");
+        }
+      } else {
+        // ALREADY REGISTERED: AUTHENTICATE
+        try {
+          const publicKeyCredentialRequestOptions = {
+            challenge: new Uint8Array(32), // dummy challenge
+            allowCredentials: [{
+              id: base64urlToBuffer(existingCredId),
+              type: 'public-key',
+              transports: ['internal'],
+            }],
+            userVerification: "required",
+            timeout: 60000
+          };
+
+          const assertion = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions
+          });
+
+          // If successful, unlock
+          unlockDashboard();
+        } catch (err) {
+          console.error("Biometric auth failed:", err);
+          alert("Authentication failed or cancelled.");
+        }
+      }
+    });
+
+    // Hardcoded fallback face template - update here to lock strictly to a specific face array
+    const HARDCODED_FACE_TEMPLATE = null;
+
+    // Convert 32x32 canvas image data to grayscale array
+    function getGrayscaleArray(ctx) {
+      const imgData = ctx.getImageData(0, 0, 32, 32);
+      const data = imgData.data;
+      const gray = new Uint8Array(1024);
+      for (let i = 0; i < 1024; i++) {
+        const r = data[i * 4];
+        const g = data[i * 4 + 1];
+        const b = data[i * 4 + 2];
+        gray[i] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+      }
+      return gray;
+    }
+
+    // Compare live grayscale array with stored template using translation shifts for robustness
+    function compareTemplates(live, stored) {
+      let minDiff = Infinity;
+      const size = 32;
+
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          let diffSum = 0;
+          let count = 0;
+
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const ly = y + dy;
+              const lx = x + dx;
+
+              if (ly >= 0 && ly < size && lx >= 0 && lx < size) {
+                const liveVal = live[ly * size + lx];
+                const storedVal = stored[y * size + x];
+                diffSum += Math.abs(liveVal - storedVal);
+                count++;
+              }
+            }
+          }
+
+          const avgDiff = diffSum / count;
+          if (avgDiff < minDiff) {
+            minDiff = avgDiff;
+          }
+        }
+      }
+      return minDiff;
+    }
+
+    let faceStream = null;
+    let scanAnimationId = null;
+
+    // Face Scan Button Click Handler
+    document.getElementById('faceBtn').addEventListener('click', async () => {
+      const modal = document.getElementById('faceModal');
+      const statusEl = document.getElementById('faceStatus');
+      const video = document.getElementById('faceVideo');
+
+      statusEl.textContent = "Requesting camera access...";
+      modal.classList.add('active');
+
+      try {
+        faceStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 320, facingMode: "user" }
+        });
+        video.srcObject = faceStream;
+
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = 32;
+        offscreenCanvas.height = 32;
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+
+        let existingTemplate = localStorage.getItem('admin_face_template');
+        if (!existingTemplate && HARDCODED_FACE_TEMPLATE) {
+          existingTemplate = JSON.stringify(HARDCODED_FACE_TEMPLATE);
+        }
+
+        if (!existingTemplate) {
+          // FIRST TIME REGISTRATION
+          statusEl.textContent = "PIN Required for first-time setup...";
+          let pin = document.getElementById('pinInput').value;
+          if (pin !== ADMIN_PIN) {
+            pin = prompt("First-time setup: Enter Admin PIN to register your face:");
+          }
+          if (pin !== ADMIN_PIN) {
+            if (pin !== null && pin !== '') alert("Incorrect PIN. Face registration denied.");
+            closeFaceScanner();
+            return;
+          }
+
+          statusEl.textContent = "Scanning and registering face...";
+          // Capture after a 1.5s delay to allow camera auto-exposure to settle
+          setTimeout(() => {
+            if (!faceStream) return;
+            offscreenCtx.drawImage(video, 0, 0, 32, 32);
+            const templateArray = getGrayscaleArray(offscreenCtx);
+            localStorage.setItem('admin_face_template', JSON.stringify(Array.from(templateArray)));
+            alert("Face registered successfully!");
+            closeFaceScanner();
+            unlockDashboard();
+          }, 1500);
+
+        } else {
+          // ALREADY REGISTERED: AUTHENTICATE
+          const stored = new Uint8Array(JSON.parse(existingTemplate));
+          statusEl.textContent = "Align face. Scanning...";
+          
+          let matchFound = false;
+          let framesMatchedCount = 0;
+          const startTime = Date.now();
+
+          const scanLoop = () => {
+            if (matchFound || !faceStream) return;
+
+            // Timeout after 10s
+            if (Date.now() - startTime > 10000) {
+              statusEl.textContent = "Face not recognized. Try again.";
+              setTimeout(closeFaceScanner, 2000);
+              return;
+            }
+
+            offscreenCtx.drawImage(video, 0, 0, 32, 32);
+            const live = getGrayscaleArray(offscreenCtx);
+            const diff = compareTemplates(live, stored);
+
+            // A diff below 35 usually indicates high similarity
+            if (diff < 35) {
+              framesMatchedCount++;
+              if (framesMatchedCount >= 3) { // Require 3 consecutive matches
+                matchFound = true;
+                statusEl.textContent = "ACCESS GRANTED! Unlocking...";
+                statusEl.style.color = "var(--teal)";
+                document.querySelector('.face-scanner-container').style.borderColor = "var(--teal)";
+                setTimeout(() => {
+                  closeFaceScanner();
+                  unlockDashboard();
+                  statusEl.style.color = "";
+                  document.querySelector('.face-scanner-container').style.borderColor = "";
+                }, 1000);
+                return;
+              }
+            } else {
+              framesMatchedCount = 0;
+            }
+
+            scanAnimationId = requestAnimationFrame(scanLoop);
+          };
+
+          // Delay starting scanning analysis for 800ms for camera setup
+          setTimeout(() => {
+            if (faceStream) scanAnimationId = requestAnimationFrame(scanLoop);
+          }, 800);
+        }
+
+      } catch (err) {
+        console.error("Face scan error:", err);
+        statusEl.textContent = "Camera access denied or failed.";
+        setTimeout(closeFaceScanner, 2500);
+      }
+    });
+
+    function closeFaceScanner() {
+      if (faceStream) {
+        faceStream.getTracks().forEach(track => track.stop());
+        faceStream = null;
+      }
+      if (scanAnimationId) {
+        cancelAnimationFrame(scanAnimationId);
+        scanAnimationId = null;
+      }
+      document.getElementById('faceVideo').srcObject = null;
+      document.getElementById('faceModal').classList.remove('active');
+    }
+
+    document.getElementById('closeFaceBtn').addEventListener('click', closeFaceScanner);
+
+    // Hide fingerprint option on desktop/PC devices (only show in mobiles)
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (!isMobile) {
+      const fpBtn = document.getElementById('fingerprintBtn');
+      if (fpBtn) fpBtn.style.display = 'none';
+    }
+
+    // Prevent scrolling/bouncing on mobile devices when lock screen is open
+    document.getElementById('authOverlay').addEventListener('touchmove', (e) => {
+      e.preventDefault();
+    }, { passive: false });
+
+    // Sidebar Drawer Toggle Logic
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebarDrawer = document.getElementById('sidebarDrawer');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+
+    function toggleSidebar() {
+      const isActive = sidebarDrawer.classList.toggle('active');
+      hamburgerBtn.classList.toggle('active');
+      sidebarOverlay.classList.toggle('active');
+      
+      // Prevent body scrolling when sidebar is open
+      if (isActive) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Only remove overflow lock if lock overlay is NOT open
+        if (document.getElementById('authOverlay').classList.contains('hidden')) {
+          document.body.style.overflow = '';
+        }
+      }
+    }
+
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking any link
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (sidebarDrawer.classList.contains('active')) {
+          toggleSidebar();
+        }
+      });
+    });
+
+    /* ── Init ── */
+    loadDashboard();
+
+    /* Auto-refresh every 30 seconds */
+    setInterval(loadDashboard, 30000);
+  </script>
 </body>
+
 </html>

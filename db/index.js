@@ -148,11 +148,52 @@ export default {
 
   /**
    * Get all emergency requests from the database
+   * Supports both the current emergency_requests table and compatible fallback tables.
    */
   getAllRequests: async () => {
     try {
-      return await db.select().from(emergencyRequests).orderBy(desc(emergencyRequests.timestamp));
+      const requests = await db.select().from(emergencyRequests).orderBy(desc(emergencyRequests.timestamp));
+      if (requests.length) {
+        return requests;
+      }
+
+      // Fallback to emergency_care if emergency_requests is empty
+      const fallbackCare = await db.select().from(emergencyCare).orderBy(desc(emergencyCare.timestamp));
+      if (fallbackCare.length) {
+        return fallbackCare;
+      }
+
+      return requests;
     } catch (err) {
+      console.warn('⚠️ emergency_requests query failed, trying fallback tables:', err.message);
+
+      try {
+        const fallbackCare = await db.select().from(emergencyCare).orderBy(desc(emergencyCare.timestamp));
+        if (fallbackCare.length) {
+          return fallbackCare;
+        }
+      } catch (fallbackErr) {
+        console.warn('⚠️ emergency_care fallback query failed:', fallbackErr.message);
+      }
+
+      try {
+        const rawFallback = await db.execute(sql`SELECT * FROM emergency_request ORDER BY timestamp DESC`);
+        if (Array.isArray(rawFallback) && rawFallback.length) {
+          return rawFallback;
+        }
+      } catch (rawErr) {
+        console.warn('⚠️ emergency_request raw query failed:', rawErr.message);
+      }
+
+      try {
+        const rawFallbackAlt = await db.execute(sql`SELECT * FROM emergency_requests ORDER BY timestamp DESC`);
+        if (Array.isArray(rawFallbackAlt) && rawFallbackAlt.length) {
+          return rawFallbackAlt;
+        }
+      } catch (rawErrAlt) {
+        console.warn('⚠️ emergency_requests raw query failed:', rawErrAlt.message);
+      }
+
       console.error('❌ Get all requests error:', err);
       throw err;
     }

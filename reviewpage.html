@@ -858,9 +858,12 @@
   </footer>
 
   <script>
-    const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-      ? 'http://localhost:3000' 
-      : '';
+    const API = (
+      window.location.protocol === 'file:' ||
+      !window.location.hostname ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    ) ? 'http://localhost:3000' : '';
 
 
     /* ── Utility ── */
