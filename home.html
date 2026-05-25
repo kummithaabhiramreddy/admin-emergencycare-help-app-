@@ -158,8 +158,8 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
 .pc-ec-name{font-size:13px;font-weight:700}
 .pc-ec-phone{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
 /* card actions */
-.pc-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pc-btn{padding:11px;border-radius:9px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;text-align:center}
+.pc-actions{display:grid;grid-template-columns:repeat(3, 1fr);gap:6px}
+.pc-btn{padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;text-align:center;white-space:nowrap;}
 .pc-btn.edit{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
 .pc-btn.call{background:var(--red);color:#fff}
 
@@ -209,8 +209,8 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
 
 /* ─── MOBILE OVERRIDES ─── */
 @media(max-width:768px){
-  html{height:100%;overflow:hidden}
-  body{height:100%;overflow:hidden;flex-direction:column}
+  html{height:100%;height:-webkit-fill-available;overflow:hidden}
+  body{height:100vh;height:100dvh;min-height:-webkit-fill-available;overflow:hidden;flex-direction:column}
 
   .sidebar{display:none}
 
@@ -340,6 +340,8 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
     <div class="filter-scroll">
       <span class="filter-label">Filter:</span>
       <button class="chip active" onclick="filterSev(this,'all')">All</button>
+      <button class="chip" onclick="filterSev(this,'Pending')">⏳ Pending</button>
+      <button class="chip" onclick="filterSev(this,'Complete')">✅ Complete</button>
       <button class="chip" onclick="filterSev(this,'High')">🔴 High</button>
       <button class="chip" onclick="filterSev(this,'Medium')">🟡 Medium</button>
       <button class="chip" onclick="filterSev(this,'Low')">🟢 Low</button>
@@ -379,6 +381,8 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
       <div class="filter-row">
         <span class="filter-label" style="font-size:11px;color:var(--text3);font-weight:700;white-space:nowrap">Filter:</span>
         <button class="chip active" onclick="filterSev(this,'all')">All</button>
+        <button class="chip" onclick="filterSev(this,'Pending')">Pending</button>
+        <button class="chip" onclick="filterSev(this,'Complete')">Complete</button>
         <button class="chip" onclick="filterSev(this,'High')">High Severity</button>
         <button class="chip" onclick="filterSev(this,'Medium')">Medium</button>
         <button class="chip" onclick="filterSev(this,'Low')">Low</button>
@@ -454,7 +458,7 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
       <h2 id="modalTitle">Add New Patient</h2>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" id="addPatientForm">
       <div class="form-grid">
         <div class="form-group full"><label>Patient Name *</label><input type="text" id="f_name" placeholder="Full name"/></div>
         <div class="form-group full"><label>Phone *</label><input type="tel" id="f_phone" placeholder="+91XXXXXXXXXX"/></div>
@@ -475,6 +479,18 @@ td{padding:12px 14px;font-size:13px;vertical-align:middle}
         </div>
         <div class="form-group full"><label>Emergency Contact Name</label><input type="text" id="f_ecname" placeholder="Contact person name"/></div>
         <div class="form-group full"><label>Emergency Contact Phone</label><input type="tel" id="f_ecphone" placeholder="+91XXXXXXXXXX"/></div>
+      </div>
+    </div>
+    <div class="modal-body" id="editPatientForm" style="display:none;">
+      <div class="form-grid">
+        <div class="form-group full"><label>Admin Name *</label><input type="text" id="f_edit_admin" placeholder="Enter Admin Name"/></div>
+        <div class="form-group full"><label>Status *</label>
+          <select id="f_edit_status">
+            <option value="Pending">Pending</option>
+            <option value="Complete">Complete</option>
+            <option value="Delete">Delete</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -556,6 +572,8 @@ function normalizeRequest(request) {
     age,
     gender,
     callPhone,
+    status: request.status || details.status || 'Pending',
+    adminName: request.adminName || details.adminName || 'Unassigned',
     createdAt: request.createdAt ? new Date(request.createdAt).toLocaleString() : new Date(request.timestamp || Date.now()).toLocaleString(),
   };
 }
@@ -578,17 +596,9 @@ function showError(message) {
 async function loadPatients() {
   showLoading();
   try {
-    const apiUrl = window.location.protocol.startsWith('http') ? '/api/requests' : 'http://localhost:3000/api/requests';
-    const response = await fetch(apiUrl);
+    const response = await fetch('/api/requests');
     if (!response.ok) {
-      let errorText = '';
-      try {
-        const errorBody = await response.json();
-        errorText = errorBody.error || errorBody.message || JSON.stringify(errorBody);
-      } catch (err) {
-        errorText = response.statusText;
-      }
-      throw new Error(`Server error: ${response.status} ${errorText}`);
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
     }
     const result = await response.json();
     const requests = result.requests || result.data || [];
@@ -605,7 +615,7 @@ async function loadPatients() {
   } catch (error) {
     isLoading = false;
     console.error('❌ Failed to fetch patients data:', error);
-    showError(`Failed to load emergency requests. ${error.message}`);
+    showError('Failed to load emergency requests. Check your connection and try again.');
   }
 }
 
@@ -624,7 +634,13 @@ function getFiltered(q=''){
       p.organs.toLowerCase().includes(s) ||
       p.detailsText.toLowerCase().includes(s) ||
       p.createdAt.toLowerCase().includes(s);
-    const mf=sevFilter==='all'?true:sevFilter==='both'?p.need==='both':sevFilter==='blood'?(p.need==='blood'||p.need==='both'):sevFilter==='organ'?(p.need==='organ'||p.need==='both'):p.severity===sevFilter;
+    const mf=sevFilter==='all'?true:
+             sevFilter==='both'?p.need==='both':
+             sevFilter==='blood'?(p.need==='blood'||p.need==='both'):
+             sevFilter==='organ'?(p.need==='organ'||p.need==='both'):
+             sevFilter==='Pending'?p.status==='Pending':
+             sevFilter==='Complete'?p.status==='Complete':
+             p.severity===sevFilter;
     return ms&&mf;
   });
 }
@@ -642,8 +658,9 @@ function renderTable(){
       <td>${p.createdAt}</td>
       <td><span class="sev-badge ${sevCls(p.severity)}">${p.severity}</span></td>
       <td>
-        <button class="action-btn" onclick="event.stopPropagation();editPatient(${p.id})">Edit</button>
-        <button class="action-btn danger" onclick="event.stopPropagation();deletePatient(${p.id})">Remove</button>
+        <button class="action-btn" onclick="event.stopPropagation();updateStatus(${p.id},'Pending')">Pending</button>
+        <button class="action-btn" style="color:var(--green);border-color:rgba(82,200,119,0.3);" onclick="event.stopPropagation();updateStatus(${p.id},'Complete')">Complete</button>
+        <button class="action-btn danger" onclick="event.stopPropagation();deletePatient(${p.id})">Delete</button>
       </td>
     </tr>`).join('');
 
@@ -693,6 +710,14 @@ function renderCards(){
           <div class="pc-field-label">Created</div>
           <div class="pc-field-val">${p.createdAt}</div>
         </div>
+        <div class="pc-field">
+          <div class="pc-field-label">Status</div>
+          <div class="pc-field-val">${p.status || 'Pending'}</div>
+        </div>
+        <div class="pc-field">
+          <div class="pc-field-label">Admin Name</div>
+          <div class="pc-field-val">${p.adminName || 'Unassigned'}</div>
+        </div>
       </div>
 
       <div class="pc-ec">
@@ -701,8 +726,9 @@ function renderCards(){
       </div>
 
       <div class="pc-actions">
-        <button class="pc-btn edit" onclick="event.stopPropagation();editPatient(${p.id})">✏️ Edit</button>
-        <button class="pc-btn call" ${p.callPhone ? '' : 'disabled'} onclick="event.stopPropagation();${p.callPhone ? `window.location.href='tel:${p.callPhone}'` : 'alert(\'Phone number not available\')'}">📞 Call</button>
+        <button class="pc-btn edit" onclick="event.stopPropagation();updateStatus(${p.id},'Pending')">⏳ Pending</button>
+        <button class="pc-btn call" onclick="event.stopPropagation();updateStatus(${p.id},'Complete')" style="background:var(--green);color:#fff;">✅ Complete</button>
+        <button class="pc-btn" onclick="event.stopPropagation();deletePatient(${p.id})" style="background:var(--surface2);color:var(--red);border:1px solid var(--red-mid);">🗑️ Delete</button>
       </div>
     </div>`).join('');
   updateStats();
@@ -733,6 +759,11 @@ function detailBodyHTML(p){
     <div class="detail-section">
       <div class="detail-section-title">Request Details</div>
       <div class="detail-row"><div class="detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 12h18M3 16h18"/></svg></div><div><div class="detail-key">Details</div><div class="detail-val">${p.detailsText || 'No details provided'}</div></div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Management</div>
+      <div class="detail-row"><div class="detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><div class="detail-key">Status</div><div class="detail-val">${p.status || 'Pending'}</div></div></div>
+      <div class="detail-row"><div class="detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="detail-key">Managed By</div><div class="detail-val">${p.adminName || 'Unassigned'}</div></div></div>
     </div>`;
 }
 
@@ -790,23 +821,18 @@ function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classLis
 function setBNav(el){document.querySelectorAll('.bnav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
 
 function openModal(patient){
-  document.getElementById('modalTitle').textContent=patient?'Edit Patient':'Add New Patient';
+  document.getElementById('modalTitle').textContent=patient?'Update Status':'Add New Patient';
   if(patient){
-    document.getElementById('f_name').value=patient.name;
-    document.getElementById('f_phone').value=patient.phone;
-    document.getElementById('f_age').value=patient.age;
-    document.getElementById('f_gender').value=patient.gender;
-    document.getElementById('f_location').value=patient.location;
-    document.getElementById('f_blood').value=patient.blood;
-    document.getElementById('f_need').value=patient.need;
-    document.getElementById('f_organs').value=patient.organs==='—'?'':patient.organs;
-    document.getElementById('f_severity').value=patient.severity;
-    document.getElementById('f_ecname').value=patient.ecname;
-    document.getElementById('f_ecphone').value=patient.ecphone;
+    document.getElementById('addPatientForm').style.display='none';
+    document.getElementById('editPatientForm').style.display='block';
+    document.getElementById('f_edit_admin').value=patient.adminName || '';
+    document.getElementById('f_edit_status').value=patient.status || 'Pending';
     document.getElementById('modalOverlay').dataset.editId=patient.id;
   }else{
+    document.getElementById('addPatientForm').style.display='block';
+    document.getElementById('editPatientForm').style.display='none';
     document.getElementById('modalOverlay').dataset.editId='';
-    document.querySelectorAll('.modal input,.modal select').forEach(el=>el.value='');
+    document.querySelectorAll('#addPatientForm input,#addPatientForm select').forEach(el=>el.value='');
   }
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -822,29 +848,52 @@ function deletePatient(id){
   }
 }
 
+function updateStatus(id, newStatus){
+  const idx = patients.findIndex(p=>p.id===id);
+  if(idx>=0){
+    const currentAdmin = patients[idx].adminName && patients[idx].adminName !== 'Unassigned' ? patients[idx].adminName : '';
+    const admin = prompt("Enter Admin Name for this status update:", currentAdmin);
+    if(admin !== null) {
+      patients[idx].status = newStatus;
+      patients[idx].adminName = admin || 'Unassigned';
+      if(selectedId===id) selectPatient(id);
+      renderTable(); renderCards();
+    }
+  }
+}
+
 async function savePatient(){
-  const name=document.getElementById('f_name').value.trim();
-  const phone=document.getElementById('f_phone').value.trim();
-  const age=parseInt(document.getElementById('f_age').value);
-  const gender=document.getElementById('f_gender').value;
-  const location=document.getElementById('f_location').value.trim();
-  const blood=document.getElementById('f_blood').value;
-  const need=document.getElementById('f_need').value;
-  const organs=document.getElementById('f_organs').value.trim()||'—';
-  const severity=document.getElementById('f_severity').value;
-  const ecname=document.getElementById('f_ecname').value.trim();
-  const ecphone=document.getElementById('f_ecphone').value.trim();
-  if(!name||!phone||!age||!gender||!location||!blood||!need||!severity){alert('Please fill all required fields (marked *).');return;}
   const editId=parseInt(document.getElementById('modalOverlay').dataset.editId);
   if(editId){
-    // Local-only edit (API update not supported yet)
+    const admin = document.getElementById('f_edit_admin').value.trim();
+    const status = document.getElementById('f_edit_status').value;
+    if(!admin){alert('Please enter Admin Name.');return;}
+    
+    if(status === 'Delete'){
+      deletePatient(editId);
+      closeModal();
+      return;
+    }
+
     const idx=patients.findIndex(p=>p.id===editId);
     if(idx>=0){
-      patients[idx]={...patients[idx],requesterName:name,phone,age,gender,location,need,blood,organs,severity,ecname,ecphone};
+      patients[idx]={...patients[idx], adminName: admin, status: status};
       if(selectedId===editId)selectPatient(editId);
     }
     closeModal();renderTable();renderCards();
   }else{
+    const name=document.getElementById('f_name').value.trim();
+    const phone=document.getElementById('f_phone').value.trim();
+    const age=parseInt(document.getElementById('f_age').value);
+    const gender=document.getElementById('f_gender').value;
+    const location=document.getElementById('f_location').value.trim();
+    const blood=document.getElementById('f_blood').value;
+    const need=document.getElementById('f_need').value;
+    const organs=document.getElementById('f_organs').value.trim()||'—';
+    const severity=document.getElementById('f_severity').value;
+    const ecname=document.getElementById('f_ecname').value.trim();
+    const ecphone=document.getElementById('f_ecphone').value.trim();
+    if(!name||!phone||!age||!gender||!location||!blood||!need||!severity){alert('Please fill all required fields (marked *).');return;}
     // Save new patient to Neon database via API
     const requestData = {
       donorId: `REQ-${Date.now()}`,
