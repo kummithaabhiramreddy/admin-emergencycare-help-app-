@@ -186,7 +186,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .card-list{display:none}
 .card{
   background:var(--s1);border:1px solid var(--b1);border-radius:14px;
-  overflow:hidden;transition:border-color .15s;
+  overflow:hidden;transition:border-color .15s; flex-shrink: 0;
 }
 .card.sel{border-color:var(--red-b);background:rgba(255,59,92,.04)}
 .card-bar{height:3px}
@@ -525,6 +525,19 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- MOBILE DETAIL MODAL -->
+<div class="overlay" id="mobDetailOverlay">
+  <div class="modal" style="max-width:560px;margin:0 auto">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2>Patient Detail</h2>
+      <button class="modal-close" onclick="closeMobDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="mobDetailBody" style="padding:0">
+    </div>
+  </div>
+</div>
+
 <script>
 // ── DATA ──
 let patients = [];
@@ -599,14 +612,14 @@ function renderCards(){
     return;
   }
   document.getElementById('cardList').innerHTML=filtered.map(p=>`
-    <div class="card ${selId===p.id?'sel':''}">
+    <div class="card ${selId===p.id?'sel':''}" onclick="openMobDetail(${p.id})">
       <div class="card-bar ${sevCls(p.severity)}"></div>
       <div class="card-body">
         <div class="c-top">
           <div class="c-av">${ini(p.name)}</div>
           <div style="flex:1;min-width:0">
             <div class="c-name">${p.name}</div>
-            <div class="c-sub"><a href="tel:${p.phone}" style="color:inherit;text-decoration:none" onclick="event.stopPropagation()">${p.phone}</a>${p.email?' · '+p.email:''}</div>
+            <div class="c-sub">${p.phone}${p.email?' · '+p.email:''}</div>
           </div>
           <span class="sev ${sevCls(p.severity)}" style="flex-shrink:0">${p.severity}</span>
         </div>
@@ -618,33 +631,7 @@ function renderCards(){
           <span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>
           ${p.adminName ? `<span style="font-size:10px;color:var(--t3);align-self:center;margin-left:4px">by ${p.adminName}</span>` : ''}
         </div>
-
-        <div class="c-grid">
-          <div class="c-field">
-            <div class="c-field-lbl">Age / Gender</div>
-            <div class="c-field-val">${p.age?p.age+' yrs':'-'}${p.gender?' · '+p.gender:''}</div>
-          </div>
-          <div class="c-field">
-            <div class="c-field-lbl">Location</div>
-            <div class="c-field-val">${p.location||'—'}</div>
-          </div>
-          ${p.ecname||p.ecphone?`
-          <div class="c-field c-full">
-            <div class="c-field-lbl">Emergency Contact</div>
-            <div class="c-field-val">${p.ecname||''}${p.ecname&&p.ecphone?' · ':''}${p.ecphone?`<a href="tel:${p.ecphone}" style="color:inherit;text-decoration:none" onclick="event.stopPropagation()">${p.ecphone}</a>`:''}</div>
-          </div>`:''}
-        </div>
-
-        ${p.notes?`
-        <div class="c-notes">
-          <div class="c-notes-lbl">Additional Notes</div>
-          <div class="c-notes-val">${p.notes}</div>
-        </div>`:''}
-
-        <div class="c-actions">
-          <a href="tel:${p.ecphone || p.phone}" class="c-btn" style="text-decoration:none; background:var(--s2); color:var(--amber); border:1px solid var(--amb-b); display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation();">📞 Call</a>
-          <button class="c-btn complete" onclick="setStatus(${p.id},'Complete')">✅ Complete</button>
-        </div>
+        <div style="font-size:11px; color:var(--amber); text-align:right; margin-top:4px;">Tap to view details &rarr;</div>
       </div>
     </div>`).join('');
 }
@@ -696,6 +683,50 @@ function selectP(id){
 function dRow(ico,key,val){
   return `<div class="d-row"><div class="d-ico" style="font-size:12px">${ico}</div><div><div class="d-key">${key}</div><div class="d-val">${val||'—'}</div></div></div>`;
 }
+
+// ── MOBILE DETAIL ──
+function openMobDetail(id){
+  const p=patients.find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('mobDetailBody').innerHTML=`
+    <div class="d-head" style="border-bottom:1px solid var(--b1); padding:16px 20px;">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div class="d-av">${ini(p.name)}</div>
+        <div><div class="d-name">${p.name}</div><div class="d-sub"><a href="tel:${p.phone}" style="color:inherit;text-decoration:none">${p.phone}</a></div></div>
+      </div>
+    </div>
+    <div class="d-body" style="padding: 14px 20px;">
+      <div class="d-sec-title">Personal</div>
+      ${dRow('👤','Name',p.name)}
+      ${dRow('📞','Phone',`<a href="tel:${p.phone}" style="color:inherit;text-decoration:none">${p.phone}</a>`)}
+      ${dRow('✉️','Email',p.email||'—')}
+      ${dRow('🎂','Age / Gender',(p.age?p.age+' yrs':'-')+(p.gender?' · '+p.gender:''))}
+      ${dRow('📍','Location',p.location||'—')}
+
+      <div class="d-sec-title">Emergency Request</div>
+      <div class="d-row"><div class="d-ico" style="font-size:12px">🆘</div><div><div class="d-key">Type</div><div class="d-val"><span class="need">${needLbl(p.need)}</span></div></div></div>
+      ${p.blood?`<div class="d-row"><div class="d-ico" style="font-size:12px">🩸</div><div><div class="d-key">Blood Group</div><div class="d-val"><span class="blood-pill">🩸 ${p.blood}</span></div></div></div>`:''}
+      ${p.organs?`<div class="d-row"><div class="d-ico" style="font-size:12px">🫀</div><div><div class="d-key">Organs</div><div class="d-val">${p.organs}</div></div></div>`:''}
+      <div class="d-row"><div class="d-ico" style="font-size:12px">⚠️</div><div><div class="d-key">Severity</div><div class="d-val"><span class="sev ${sevCls(p.severity)}">${p.severity}</span></div></div></div>
+
+      ${p.ecname||p.ecphone?`
+      <div class="d-sec-title">Emergency Contact</div>
+      ${dRow('👥','Name',p.ecname||'—')}
+      ${dRow('📞','Phone',p.ecphone?`<a href="tel:${p.ecphone}" style="color:inherit;text-decoration:none">${p.ecphone}</a>`:'—')}`:''}
+
+      ${p.notes?`<div class="d-sec-title">Notes</div>${dRow('📝','Notes',p.notes)}`:''}
+
+      <div class="d-sec-title">Status</div>
+      <div class="d-row"><div class="d-ico" style="font-size:12px">🔘</div><div><div class="d-key">Current Status</div><div class="d-val"><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.adminName ? `<span style="margin-left:8px;font-size:11px;color:var(--t3)">by ${p.adminName}</span>` : ''}</div></div></div>
+    </div>
+    <div class="d-actions" style="border-top:1px solid var(--b1); padding: 14px 20px; display:flex; gap:10px;">
+      <a href="tel:${p.ecphone || p.phone}" class="d-btn-p" style="text-decoration:none; display:flex; align-items:center; justify-content:center; flex:1;" onclick="event.stopPropagation();">📞 Call</a>
+      <button class="d-btn-c" style="flex:1;" onclick="setStatus(${p.id},'Complete'); closeMobDetail();">✅ Complete</button>
+    </div>
+  `;
+  document.getElementById('mobDetailOverlay').classList.add('open');
+}
+function closeMobDetail(){document.getElementById('mobDetailOverlay').classList.remove('open')}
 
 // ── STATS ──
 function updateStats(){
@@ -837,6 +868,7 @@ function toggleMobFilter(){
 function setBnav(el){document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
 
 document.getElementById('addOverlay').addEventListener('click',function(e){if(e.target===this)closeAdd()});
+document.getElementById('mobDetailOverlay').addEventListener('click',function(e){if(e.target===this)closeMobDetail()});
 
 // ── LOAD DATA ──
 async function loadPatients() {
