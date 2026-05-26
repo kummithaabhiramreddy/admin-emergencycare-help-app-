@@ -130,6 +130,11 @@ async function getAllRequests() {
   }));
 }
 
+async function updateEmergencyRequest(id, updates) {
+  // updates is expected to have { details: string } or similar
+  await db.update(emergencyRequests).set(updates).where(eq(emergencyRequests.id, id));
+}
+
 /* ══════════════════════════════════════════════
    DONATION EVENT OPERATIONS
    ══════════════════════════════════════════════ */
@@ -282,6 +287,7 @@ const dbRepo = {
   // Emergency Requests
   logEmergencyRequest,
   getAllRequests,
+  updateEmergencyRequest,
   // Donations
   logDonationEvent,
   // Users

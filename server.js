@@ -548,6 +548,38 @@ async function handler(req, res) {
   }
 
   /* ══════════════════════════════════════════════
+     POST /api/requests/update — update an emergency request
+  ══════════════════════════════════════════════ */
+  if (req.method === 'POST' && pathname === '/api/requests/update') {
+    const body = await readBody(req);
+    try {
+      if (!body.id) {
+        return sendJSON(res, 400, { error: 'Missing request id.' });
+      }
+      
+      const requests = await dbRepo.getAllRequests();
+      const reqRecord = requests.find(r => r.id === body.id);
+      if (!reqRecord) {
+        return sendJSON(res, 404, { error: 'Request not found.' });
+      }
+
+      let detailsObj = {};
+      try { detailsObj = JSON.parse(reqRecord.details || '{}'); } catch(e){}
+      
+      detailsObj = { ...detailsObj, ...body.details };
+
+      await dbRepo.updateEmergencyRequest(body.id, {
+        details: JSON.stringify(detailsObj)
+      });
+
+      return sendJSON(res, 200, { success: true });
+    } catch (err) {
+      console.error('❌ Request Update Error:', err);
+      return sendJSON(res, 500, { error: 'Failed to update emergency request.' });
+    }
+  }
+
+  /* ══════════════════════════════════════════════
      POST /api/donors/donate — log a donation event
   ══════════════════════════════════════════════ */
   if (req.method === 'POST' && pathname === '/api/donors/donate') {

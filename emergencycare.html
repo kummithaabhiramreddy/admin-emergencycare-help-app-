@@ -549,20 +549,19 @@
     bloodGroup: bloodGroup || null,
     organType: organs.length ? organs.join(',') : null,
     details: JSON.stringify({
+      phone: document.getElementById('patientPhone').value.trim(),
+      email: document.getElementById('patientEmail').value.trim(),
       age: document.getElementById('patientAge').value.trim(),
       gender: document.getElementById('patientGender').value,
       location: document.getElementById('patientLocation').value.trim(),
-      patientPhone: document.getElementById('patientPhone').value.trim(),
-      patientEmail: document.getElementById('patientEmail').value.trim(),
-      severity: severity,
+      severity: severity.charAt(0).toUpperCase() + severity.slice(1),
       allergies: document.getElementById('allergies').value.trim(),
       medications: document.getElementById('medications').value.trim(),
       conditions: document.getElementById('conditions').value.trim(),
-      emergencyContact: {
-        name: document.getElementById('ecName').value.trim(),
-        phone: document.getElementById('ecPhone').value.trim()
-      },
-      notes: document.getElementById('notes').value.trim()
+      ecname: document.getElementById('ecName').value.trim(),
+      ecphone: document.getElementById('ecPhone').value.trim(),
+      notes: document.getElementById('notes').value.trim(),
+      status: 'Pending'
     })
   };
 
