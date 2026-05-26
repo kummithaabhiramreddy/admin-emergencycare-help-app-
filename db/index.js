@@ -125,14 +125,19 @@ async function getAllRequests() {
     bloodGroup: r.bloodGroup,
     organType: r.organType,
     details: r.details,
+    completedStatus: r.completedStatus || 'Pending',
+    completedAdminName: r.completedAdminName || '',
     timestamp: r.timestamp,
     createdAt: r.createdAt,
   }));
 }
 
 async function updateEmergencyRequest(id, updates) {
-  // updates is expected to have { details: string } or similar
-  await db.update(emergencyRequests).set(updates).where(eq(emergencyRequests.id, id));
+  const updateData = {};
+  if (updates.details !== undefined) updateData.details = updates.details;
+  if (updates.completedStatus !== undefined) updateData.completedStatus = updates.completedStatus;
+  if (updates.completedAdminName !== undefined) updateData.completedAdminName = updates.completedAdminName;
+  await db.update(emergencyRequests).set(updateData).where(eq(emergencyRequests.id, id));
 }
 
 /* ══════════════════════════════════════════════

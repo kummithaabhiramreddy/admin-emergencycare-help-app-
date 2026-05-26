@@ -568,9 +568,19 @@ async function handler(req, res) {
       
       detailsObj = { ...detailsObj, ...body.details };
 
-      await dbRepo.updateEmergencyRequest(body.id, {
+      const updatePayload = {
         details: JSON.stringify(detailsObj)
-      });
+      };
+
+      // Also store in dedicated columns if provided
+      if (body.details && body.details.status) {
+        updatePayload.completedStatus = body.details.status;
+      }
+      if (body.details && body.details.adminName) {
+        updatePayload.completedAdminName = body.details.adminName;
+      }
+
+      await dbRepo.updateEmergencyRequest(body.id, updatePayload);
 
       return sendJSON(res, 200, { success: true });
     } catch (err) {

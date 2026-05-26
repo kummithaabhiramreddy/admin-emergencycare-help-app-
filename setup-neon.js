@@ -55,6 +55,8 @@ async function setup() {
         blood_group VARCHAR(10),
         organ_type TEXT,
         details TEXT,
+        completed_status VARCHAR(50) DEFAULT 'Pending',
+        completed_admin_name VARCHAR(255),
         timestamp BIGINT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -72,6 +74,8 @@ async function setup() {
         blood_group VARCHAR(10),
         organ_type TEXT,
         details TEXT,
+        completed_status VARCHAR(50) DEFAULT 'Pending',
+        completed_admin_name VARCHAR(255),
         timestamp BIGINT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

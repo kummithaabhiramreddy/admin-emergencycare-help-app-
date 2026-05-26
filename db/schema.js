@@ -38,6 +38,8 @@ export const emergencyRequests = pgTable('emergency_requests', {
   bloodGroup: varchar('blood_group', { length: 10 }),
   organType: text('organ_type'),
   details: text('details'),
+  completedStatus: varchar('completed_status', { length: 50 }).default('Pending'),
+  completedAdminName: varchar('completed_admin_name', { length: 255 }),
   timestamp: bigint('timestamp', { mode: 'number' }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
