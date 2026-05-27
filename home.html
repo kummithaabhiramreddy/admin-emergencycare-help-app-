@@ -674,9 +674,16 @@ function selectP(id){
       ${dRow('👥','Name',p.ecname||'—')}
       ${dRow('📞','Phone',p.ecphone?`<a href="tel:${p.ecphone}" style="color:inherit;text-decoration:none">${p.ecphone}</a>`:'—')}`:''}
 
-      ${p.notes?`<div class="d-sec-title">Notes</div>${dRow('📝','Notes',p.notes)}`:''}
+      ${p.notes?`<div class="d-sec-title">Notes</div>${dRow('📝','Notes',p.notes)}`:``}
+
+      ${(p.allergies||p.medications||p.conditions)?`
+      <div class="d-sec-title">Medical Info</div>
+      ${p.allergies?dRow('⚠️','Allergies',p.allergies):''}
+      ${p.medications?dRow('💊','Medications',p.medications):''}
+      ${p.conditions?dRow('🏥','Conditions',p.conditions):''}`:''}
 
       <div class="d-sec-title">Status</div>
+      ${dRow('📅','Requested On',p.createdAt||'—')}
       <div class="d-row"><div class="d-ico" style="font-size:12px">🔘</div><div><div class="d-key">Current Status</div><div class="d-val"><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.adminName ? `<span style="margin-left:8px;font-size:11px;color:var(--t3)">by ${p.adminName}</span>` : ''}</div></div></div>
     </div>
     ${p.status==='Complete'?'':`<div class="d-actions">
@@ -721,7 +728,14 @@ function openMobDetail(id){
 
       ${p.notes?`<div class="d-sec-title">Notes</div>${dRow('📝','Notes',p.notes)}`:''}
 
+      ${(p.allergies||p.medications||p.conditions)?`
+      <div class="d-sec-title">Medical Info</div>
+      ${p.allergies?dRow('⚠️','Allergies',p.allergies):''}
+      ${p.medications?dRow('💊','Medications',p.medications):''}
+      ${p.conditions?dRow('🏥','Conditions',p.conditions):''}`:''}
+
       <div class="d-sec-title">Status</div>
+      ${dRow('📅','Requested On',p.createdAt||'—')}
       <div class="d-row"><div class="d-ico" style="font-size:12px">🔘</div><div><div class="d-key">Current Status</div><div class="d-val"><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.adminName ? `<span style="margin-left:8px;font-size:11px;color:var(--t3)">by ${p.adminName}</span>` : ''}</div></div></div>
     </div>
     ${p.status==='Complete'?'':`<div class="d-actions" style="border-top:1px solid var(--b1); padding: 14px 20px; display:flex; gap:10px;">
@@ -884,24 +898,29 @@ async function loadPatients() {
       patients = data.requests.map(r => {
         let details = {};
         try { details = JSON.parse(r.details || '{}'); } catch(e){}
+        // Normalize: handle all key name variants from different forms
+        const ec = details.emergencyContact || {};
         return {
           id: r.id,
           name: r.requesterName || details.name || 'Unknown',
-          phone: details.phone || '',
-          email: details.email || '',
-          age: details.age || '',
-          gender: details.gender || '',
-          location: details.location || '',
+          phone: details.phone || details.patientPhone || '',
+          email: details.email || details.patientEmail || '',
+          age: details.age || details.patientAge || '',
+          gender: details.gender || details.patientGender || '',
+          location: details.location || details.patientLocation || '',
           need: r.requestType ? r.requestType.toLowerCase() : '',
           blood: r.bloodGroup || '',
           organs: r.organType || '',
           severity: details.severity || 'Medium',
-          ecname: details.ecname || '',
-          ecphone: details.ecphone || '',
+          ecname: details.ecname || details.ecName || ec.name || '',
+          ecphone: details.ecphone || details.ecPhone || ec.phone || '',
           notes: details.notes || '',
+          allergies: details.allergies || '',
+          medications: details.medications || '',
+          conditions: details.conditions || '',
           status: r.completedStatus || details.status || 'Pending',
           adminName: r.completedAdminName || details.adminName || '',
-          createdAt: new Date(r.timestamp).toLocaleString()
+          createdAt: new Date(Number(r.timestamp)).toLocaleString()
         };
       });
       render();
