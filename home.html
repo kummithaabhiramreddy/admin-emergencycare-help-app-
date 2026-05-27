@@ -910,7 +910,7 @@ async function loadPatients() {
           need: r.requestType ? r.requestType.toLowerCase() : '',
           blood: r.bloodGroup || '',
           organs: r.organType || '',
-          severity: details.severity || 'Medium',
+          severity: details.severity ? (details.severity.charAt(0).toUpperCase() + details.severity.slice(1).toLowerCase()) : 'Medium',
           ecname: details.ecname || details.ecName || ec.name || '',
           ecphone: details.ecphone || details.ecPhone || ec.phone || '',
           notes: details.notes || '',
