@@ -597,8 +597,8 @@ function renderTable(){
       <td><span class="sev ${sevCls(p.severity)}">${p.severity}</span></td>
       <td><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.status==='Complete'&&p.adminName?`<span style="display:block;font-size:10px;color:var(--t3);margin-top:3px">by ${p.adminName}</span>`:''}</td>
       <td>
-        ${p.status==='Complete'?`<span style="color:var(--green);font-size:11px;font-weight:700">✅ Done</span>`:`<button class="act-btn complete" onclick="event.stopPropagation();setStatus(${p.id},'Complete')">✅ Complete</button>
-        <a href="tel:${p.ecphone || p.phone}" class="act-btn" style="text-decoration:none; display:inline-block;" onclick="event.stopPropagation();">📞 Call</a>`}
+        <a href="tel:${p.ecphone || p.phone}" class="act-btn" style="text-decoration:none; display:inline-block; margin-right:4px;" onclick="event.stopPropagation();">📞 Call</a>
+        ${p.status==='Complete'?`<span style="color:var(--green);font-size:11px;font-weight:700">✅ Done</span>`:`<button class="act-btn complete" onclick="event.stopPropagation();setStatus(${p.id},'Complete')">✅ Complete</button>`}
       </td>
     </tr>`).join('');
   document.getElementById('tbody').innerHTML=rows||`<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--t3);font-size:13px">No patients match your filter.</td></tr>`;
@@ -631,11 +631,10 @@ function renderCards(){
           <span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>
           ${p.adminName ? `<span style="font-size:10px;color:var(--t3);align-self:center;margin-left:4px">by ${p.adminName}</span>` : ''}
         </div>
-        ${p.status==='Complete'?'':`
         <div class="c-actions" style="margin-top:12px;" onclick="event.stopPropagation();">
           <a href="tel:${p.ecphone || p.phone}" class="c-btn" style="background:var(--s2); color:var(--t2); border:1px solid var(--b2); text-decoration:none; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation();">📞 Call</a>
-          <button class="c-btn complete" onclick="event.stopPropagation(); setStatus(${p.id},'Complete')">✅ Complete</button>
-        </div>`}
+          ${p.status==='Complete'?'':`<button class="c-btn complete" onclick="event.stopPropagation(); setStatus(${p.id},'Complete')">✅ Complete</button>`}
+        </div>
         <div style="font-size:11px; color:var(--amber); text-align:right; margin-top:8px;">Tap to view details &rarr;</div>
       </div>
     </div>`).join('');
@@ -686,10 +685,10 @@ function selectP(id){
       ${dRow('📅','Requested On',p.createdAt||'—')}
       <div class="d-row"><div class="d-ico" style="font-size:12px">🔘</div><div><div class="d-key">Current Status</div><div class="d-val"><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.adminName ? `<span style="margin-left:8px;font-size:11px;color:var(--t3)">by ${p.adminName}</span>` : ''}</div></div></div>
     </div>
-    ${p.status==='Complete'?'':`<div class="d-actions">
+    <div class="d-actions">
       <a href="tel:${p.ecphone || p.phone}" class="d-btn-p" style="text-decoration:none; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation();">📞 Call</a>
-      <button class="d-btn-c" onclick="setStatus(${p.id},'Complete')">✅ Complete</button>
-    </div>`}`;
+      ${p.status==='Complete'?'':`<button class="d-btn-c" onclick="setStatus(${p.id},'Complete')">✅ Complete</button>`}
+    </div>`;
 }
 
 function dRow(ico,key,val){
@@ -738,10 +737,10 @@ function openMobDetail(id){
       ${dRow('📅','Requested On',p.createdAt||'—')}
       <div class="d-row"><div class="d-ico" style="font-size:12px">🔘</div><div><div class="d-key">Current Status</div><div class="d-val"><span class="status-pill ${p.status==='Complete'?'sp-complete':'sp-pending'}">${p.status}</span>${p.adminName ? `<span style="margin-left:8px;font-size:11px;color:var(--t3)">by ${p.adminName}</span>` : ''}</div></div></div>
     </div>
-    ${p.status==='Complete'?'':`<div class="d-actions" style="border-top:1px solid var(--b1); padding: 14px 20px; display:flex; gap:10px;">
+    <div class="d-actions" style="border-top:1px solid var(--b1); padding: 14px 20px; display:flex; gap:10px;">
       <a href="tel:${p.ecphone || p.phone}" class="d-btn-p" style="text-decoration:none; display:flex; align-items:center; justify-content:center; flex:1;" onclick="event.stopPropagation();">📞 Call</a>
-      <button class="d-btn-c" style="flex:1;" onclick="setStatus(${p.id},'Complete'); closeMobDetail();">✅ Complete</button>
-    </div>`}
+      ${p.status==='Complete'?'':`<button class="d-btn-c" style="flex:1;" onclick="setStatus(${p.id},'Complete'); closeMobDetail();">✅ Complete</button>`}
+    </div>
   `;
   document.getElementById('mobDetailOverlay').classList.add('open');
 }
@@ -918,7 +917,7 @@ async function loadPatients() {
           allergies: details.allergies || '',
           medications: details.medications || '',
           conditions: details.conditions || '',
-          status: r.completedStatus || details.status || 'Pending',
+          status: (r.completedStatus === 'Complete' || details.status === 'Complete') ? 'Complete' : 'Pending',
           adminName: r.completedAdminName || details.adminName || '',
           createdAt: new Date(Number(r.timestamp)).toLocaleString()
         };
